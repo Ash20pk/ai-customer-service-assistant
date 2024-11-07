@@ -5,7 +5,8 @@ interface EmbedCodeProps {
 }
 
 export function EmbedCode({ botId }: EmbedCodeProps) {
-  const embedCode = `<script src="${process.env.NEXT_PUBLIC_APP_URL}/api/widget?botId=${botId}"></script>`;
+  const appUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const embedCode = `<script src="${appUrl}/api/widget?botId=${botId}"></script>`;
   
   const handleCopy = async () => {
     try {

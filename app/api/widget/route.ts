@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
+  const { searchParams, origin } = new URL(req.url);
   const botId = searchParams.get('botId');
 
   if (!botId) {
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
 
       // Load React and Next.js runtime
       const script = document.createElement('script');
-      script.src = '${process.env.NEXT_PUBLIC_APP_URL}/widget/bundle.js';
+      script.src = '${origin}/widget/bundle.js';
       script.async = true;
       script.onload = function() {
         // Initialize widget with configuration
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
       // Load widget styles
       const styles = document.createElement('link');
       styles.rel = 'stylesheet';
-      styles.href = '${process.env.NEXT_PUBLIC_APP_URL}/widget/styles.css';
+      styles.href = '${origin}/widget/styles.css';
       document.head.appendChild(styles);
     })();
   `;
