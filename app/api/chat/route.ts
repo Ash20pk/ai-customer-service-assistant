@@ -22,14 +22,17 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const botId = searchParams.get('botId');
     const message = searchParams.get('message');
+    const isWidget = searchParams.get('widget') === 'true';
 
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    if (!isWidget) {
+      if (!token) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
 
-    const userId = await verifyToken(token.value);
-    if (!userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      const userId = await verifyToken(token.value);
+      if (!userId) {
+        return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      }
     }
 
     if (!botId || !message) {

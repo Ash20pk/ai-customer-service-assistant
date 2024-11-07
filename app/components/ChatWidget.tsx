@@ -1,63 +1,89 @@
 'use client';
 
 import { useState } from 'react';
+import styles from './ChatWidget.module.css';
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
+interface ChatWidgetProps {
+  botId: string;
 }
 
-export default function ChatWidget({ chatbotId }: { chatbotId: string }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function ChatWidget({ botId }: ChatWidgetProps) {
+  const [messages, setMessages] = useState<string[]>([]);
   const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const sendMessage = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!input.trim()) return;
 
-    const userMessage: Message = { role: 'user', content: input };
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
+    setIsLoading(true);
+    const userMessage = input;
     setInput('');
+    setMessages(prev => [...prev, `User: ${userMessage}`]);
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input, chatbotId }),
+      const response = await fetch(`/api/chat?botId=${botId}&message=${encodeURIComponent(userMessage)}&widget=true`, {
+        method: 'GET',
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        const assistantMessage: Message = { role: 'assistant', content: data.message };
-        setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-      } else {
-        console.error('Error sending message');
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) return;
+
+      let botResponse = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const text = new TextDecoder().decode(value);
+        const lines = text.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = JSON.parse(line.slice(5));
+            if (data.content === '[DONE]') {
+              setMessages(prev => [...prev, `Bot: ${botResponse}`]);
+              botResponse = '';
+            } else if (data.content) {
+              botResponse += data.content;
+            }
+          }
+        }
       }
     } catch (error) {
       console.error('Error:', error);
+      setMessages(prev => [...prev, 'Error: Failed to get response']);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="fixed bottom-4 right-4 w-80 bg-white border border-gray-300 rounded-lg shadow-lg">
-      <div className="h-96 overflow-y-auto p-4">
-        {messages.map((message, index) => (
-          <div key={index} className={`mb-2 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
-            <span className={`inline-block p-2 rounded-lg ${message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>
-              {message.content}
-            </span>
+    <div className={styles.widget}>
+      <div className={styles.messages}>
+        {messages.map((msg, index) => (
+          <div key={index} className={styles.message}>
+            {msg}
           </div>
         ))}
+        {isLoading && <div className={styles.loading}>...</div>}
       </div>
-      <div className="p-4 border-t border-gray-300">
+      <form onSubmit={handleSubmit} className={styles.inputForm}>
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Type your message..."
+          className={styles.input}
+          disabled={isLoading}
         />
-      </div>
+        <button type="submit" disabled={isLoading} className={styles.button}>
+          Send
+        </button>
+      </form>
     </div>
   );
 }

@@ -1,41 +1,41 @@
 'use client';
 
+import { useState } from 'react';
+
 interface EmbedCodeProps {
   botId: string;
 }
 
 export function EmbedCode({ botId }: EmbedCodeProps) {
-  const appUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const embedCode = `<script src="${appUrl}/api/widget?botId=${botId}"></script>`;
-  
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(embedCode);
-      // You could add a toast notification here if you want
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-    }
+  const [copied, setCopied] = useState(false);
+
+  const embedCode = `<iframe
+  src="${window.location.origin}/widget/${botId}"
+  width="100%"
+  height="600px"
+  frameborder="0"
+></iframe>`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(embedCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="p-4 rounded-md border border-gray-200 mt-4">
-      <h3 className="font-bold mb-2">
-        Embed your chatbot
-      </h3>
-      <p className="text-sm mb-4 text-gray-600">
-        Add this code to your website to display the chat widget:
-      </p>
-      <div className="relative">
-        <pre className="p-4 bg-gray-50 rounded-md overflow-x-auto text-sm">
-          <code>{embedCode}</code>
-        </pre>
-        <button 
+    <div className="mt-4">
+      <div className="flex justify-between items-center mb-2">
+        <label className="block text-sm font-medium text-gray-700">Embed Code</label>
+        <button
           onClick={handleCopy}
-          className="absolute top-2 right-2 px-3 py-1 text-sm bg-black text-white rounded-md hover:bg-gray-800"
+          className="text-sm text-blue-500 hover:text-blue-600"
         >
-          Copy
+          {copied ? 'Copied!' : 'Copy'}
         </button>
       </div>
+      <pre className="p-3 bg-gray-100 rounded-md text-sm overflow-x-auto">
+        {embedCode}
+      </pre>
     </div>
   );
 } 
