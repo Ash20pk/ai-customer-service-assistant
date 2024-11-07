@@ -2,7 +2,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+
+// Add this interface
+interface ChatProps {
+  botId: string;
+}
 
 const ChatMessage = ({ message, isStreaming }: { 
   message: { role: string; content: string };
@@ -38,24 +43,15 @@ const TypingIndicator = () => (
   </div>
 );
 
-const getGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
-};
-
-export default function DatingAssistantPage() {
+// Update the component definition
+export default function Chat({ botId }: ChatProps) {
   const [input, setInput] = useState('');
   const [conversation, setConversation] = useState<Array<{ role: string; content: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [userName, setUserName] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { user } = useAuth();
-  const params = useParams();
-  const botId = params?.id as string;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -74,9 +70,9 @@ export default function DatingAssistantPage() {
         ]);
       }
     }
-  }, [user]);
+  }, [user, router]);
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;
 

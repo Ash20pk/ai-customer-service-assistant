@@ -5,9 +5,16 @@ import { verifyToken } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 import OpenAI from 'openai';
 
+type SSEData = {
+  content?: string;
+  message?: string;
+};
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+
 
 export async function GET(request: NextRequest) {
     const cookieStore = cookies();
@@ -62,7 +69,7 @@ export async function GET(request: NextRequest) {
   
       const stream = new ReadableStream({
         async start(controller) {
-          const sendSSE = (event: string, data: any) => {
+          const sendSSE = (event: string, data: SSEData) => {
             controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
           };
   
@@ -78,7 +85,7 @@ export async function GET(request: NextRequest) {
               if (annotations && annotations.length > 0) {
                 citations = [];
                 let index = 0;
-                for (let annotation of annotations) {
+                for (const annotation of annotations) {
                   processedText = processedText.replace(annotation.text, `[${index}]`);
                   if (annotation.type === 'file_citation') {
                     const citedFile = await openai.files.retrieve(annotation.file_citation.file_id);

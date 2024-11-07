@@ -7,14 +7,12 @@ import { useAuth } from '../contexts/AuthContext';
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const router = useRouter();
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     try {
       const response = await fetch('/api/auth/login', {
@@ -35,7 +33,7 @@ export default function Auth() {
       await login(data.user);
       router.push('/dashboard');
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Authentication failed');
+      console.error('Error:', error);
     }
   };
 

@@ -29,14 +29,6 @@ export default function ManageBot({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth');
-    } else {
-      fetchBot();
-    }
-  }, [user]);
-
   const fetchBot = async () => {
     if (!user) return;
 
@@ -54,11 +46,20 @@ export default function ManageBot({ params }: { params: { id: string } }) {
         setError(errorData.error || 'Failed to fetch bot');
       }
     } catch (error) {
-      setError('An error occurred while fetching the bot');
+      setError(`An error occurred while fetching the bot: ${error}`);
     } finally {
       setLoading(false);
     }
   };
+
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth');
+    } else {
+      fetchBot();
+    }
+  }, [user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -89,7 +90,7 @@ export default function ManageBot({ params }: { params: { id: string } }) {
         alert(errorData.error || 'Failed to upload document');
       }
     } catch (error) {
-      alert('An error occurred while uploading the document');
+      alert(`An error occurred while uploading the document: ${error}`);
     }
   };
 

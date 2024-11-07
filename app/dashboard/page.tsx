@@ -97,7 +97,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="text-center py-10">
-            <p className="text-lg text-gray-600">You haven't created any bots yet.</p>
+            <p className="text-lg text-gray-600">You haven&apos;t created any bots yet.</p>
             <button 
               className="mt-4 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
               onClick={() => router.push('/create-bot')}
