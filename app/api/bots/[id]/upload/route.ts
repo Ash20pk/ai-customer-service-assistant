@@ -6,17 +6,19 @@ import OpenAI from "openai";
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { cookies } from 'next/headers';
 
 const openai = new OpenAI();
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
-    const token = request.headers.get('Authorization')?.split(' ')[1];
+    const cookieStore = cookies();
+    const token = cookieStore.get('auth_token');
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = await verifyToken(token);
+    const userId = await verifyToken(token.value);
     if (!userId) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }

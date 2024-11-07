@@ -38,11 +38,13 @@ export default function ManageBot({ params }: { params: { id: string } }) {
   }, [user]);
 
   const fetchBot = async () => {
+    if (!user) return;
+
     setLoading(true);
     setError(null);
     try {
       const response = await fetch(`/api/bots/${params.id}`, {
-        headers: { Authorization: `Bearer ${user.token}` },
+        credentials: 'include'
       });
       if (response.ok) {
         const data = await response.json();
@@ -66,7 +68,7 @@ export default function ManageBot({ params }: { params: { id: string } }) {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file || !user) return;
 
     const formData = new FormData();
     formData.append('file', file);
@@ -74,7 +76,7 @@ export default function ManageBot({ params }: { params: { id: string } }) {
     try {
       const response = await fetch(`/api/bots/${params.id}/upload`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${user.token}` },
+        credentials: 'include',
         body: formData,
       });
 
