@@ -24,7 +24,7 @@ export default function Widget({ params }: { params: { id: string } }) {
         const data = await response.json();
         setBot(data.bot);
       } catch (error) {
-        setError('Error loading chat widget');
+        setError(`Error loading chat widget, ${error}`);
       }
     };
 
