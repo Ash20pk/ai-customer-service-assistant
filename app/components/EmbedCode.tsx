@@ -9,12 +9,19 @@ interface EmbedCodeProps {
 export function EmbedCode({ botId }: EmbedCodeProps) {
   const [copied, setCopied] = useState(false);
 
-  const embedCode = `<iframe
-  src="${window.location.origin}/widget/${botId}"
-  width="100%"
-  height="600px"
-  frameborder="0"
-></iframe>`;
+  // Create a more robust embed code that works across different domains
+  const embedCode = `<!-- AI Chat Widget -->
+<div id="ai-chat-widget"></div>
+<script>
+  (function() {
+    var script = document.createElement('script');
+    script.src = '${window.location.origin}/widget.js';
+    script.defer = true;
+    script.setAttribute('data-bot-id', '${botId}');
+    script.setAttribute('data-base-url', '${window.location.origin}');
+    document.head.appendChild(script);
+  })();
+</script>`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(embedCode);
@@ -33,7 +40,7 @@ export function EmbedCode({ botId }: EmbedCodeProps) {
           {copied ? 'Copied!' : 'Copy'}
         </button>
       </div>
-      <pre className="p-3 bg-gray-100 rounded-md text-sm overflow-x-auto">
+      <pre className="p-3 bg-gray-100 rounded-md text-sm overflow-x-auto whitespace-pre-wrap">
         {embedCode}
       </pre>
     </div>

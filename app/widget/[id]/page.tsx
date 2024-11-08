@@ -31,12 +31,20 @@ export default function Widget({ params }: { params: { id: string } }) {
     fetchBot();
   }, [params.id]);
 
-  if (error) return <div className="p-4 text-red-500">{error}</div>;
-  if (!bot) return <div className="p-4">Loading...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
+  if (!bot) return <div>Loading...</div>;
 
   return (
-    <div className="h-screen p-4">
-      <ChatWidget botId={bot._id} />
+    <div className="h-full">
+      <style jsx global>{`
+        body {
+          margin: 0;
+          padding: 0;
+          height: 100vh;
+          overflow: hidden;
+        }
+      `}</style>
+      <ChatWidget botId={bot._id} botName={bot.name} />
     </div>
   );
 } 
