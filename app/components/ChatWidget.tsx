@@ -6,6 +6,7 @@ import { Send, Check } from 'lucide-react';
 interface ChatWidgetProps {
   botId: string;
   botName?: string;
+  clientSecret: string;
 }
 
 interface Message {
@@ -66,7 +67,7 @@ const TypingIndicator = ({ botName = 'Assistant' }: { botName?: string }) => (
   </div>
 );
 
-export default function ChatWidget({ botId, botName = 'Assistant' }: ChatWidgetProps) {
+export default function ChatWidget({ botId, botName = 'Assistant', clientSecret }: ChatWidgetProps) {
   const [input, setInput] = useState('');
   const [conversation, setConversation] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -74,6 +75,7 @@ export default function ChatWidget({ botId, botName = 'Assistant' }: ChatWidgetP
   const [isTyping, setIsTyping] = useState(false);
   const [seen, setSeen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -92,7 +94,10 @@ export default function ChatWidget({ botId, botName = 'Assistant' }: ChatWidgetP
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || !clientSecret) {
+      console.error('Missing input or client secret:', { input: input.trim(), hasSecret: !!clientSecret });
+      return;
+    }
 
     try {
       // Reset states
@@ -108,7 +113,17 @@ export default function ChatWidget({ botId, botName = 'Assistant' }: ChatWidgetP
       // Start both the API call and the UI animations immediately
       const encodedInput = encodeURIComponent(currentInput);
       const eventSourcePromise = new Promise<EventSource>((resolve) => {
-        const es = new EventSource(`/api/chat?message=${encodedInput}&botId=${botId}&widget=true`);
+        const url = new URL(`${window.location.origin}/api/chat`);
+        url.searchParams.append('message', encodedInput);
+        url.searchParams.append('botId', botId);
+        url.searchParams.append('widget', 'true');
+        url.searchParams.append('clientSecret', clientSecret);
+        if (sessionId) {
+          url.searchParams.append('sessionId', sessionId);
+        }
+        
+        console.log('Making API call with URL:', url.toString());
+        const es = new EventSource(url.toString());
         resolve(es);
       });
 
@@ -146,6 +161,12 @@ export default function ChatWidget({ botId, botName = 'Assistant' }: ChatWidgetP
           setIsLoading(false);
           const data = JSON.parse(event.data);
           
+          // Handle session ID
+          if (data.sessionId) {
+            setSessionId(data.sessionId);
+            return;
+          }
+
           if (data.content === "[DONE]") {
             eventSource.close();
             setIsStreaming(false);
@@ -224,15 +245,17 @@ export default function ChatWidget({ botId, botName = 'Assistant' }: ChatWidgetP
           <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.currentTarget.value)}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 px-4 py-2 text-lg rounded-full border border-gray-300 focus:outline-none focus:border-blue-500 disabled:opacity-50"
-            disabled={isLoading || isStreaming}
+            className="flex-1 px-4 py-2 text-lg rounded-full border border-gray-300 focus:outline-none focus:border-blue-500"
           />
           <button
             type="submit"
-            className="text-black border-2 border-black px-4 py-2 text-lg rounded-full disabled:opacity-50 hover:bg-black hover:text-white transition-colors"
-            disabled={isLoading || isStreaming}
+            onClick={(e) => {
+              e.preventDefault();
+              handleSubmit(e as any);
+            }}
+            className="flex items-center justify-center min-w-[48px] h-[48px] text-black border-2 border-black rounded-full hover:bg-black hover:text-white transition-colors cursor-pointer"
           >
             <Send size={20} />
           </button>

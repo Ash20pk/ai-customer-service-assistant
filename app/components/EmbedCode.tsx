@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface EmbedCodeProps {
   botId: string;
@@ -8,16 +8,32 @@ interface EmbedCodeProps {
 
 export function EmbedCode({ botId }: EmbedCodeProps) {
   const [copied, setCopied] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
-  // Create a more robust embed code that works across different domains
+  useEffect(() => {
+    const generateClientSecret = async () => {
+      try {
+        const response = await fetch(`/api/bots/${botId}/secret`, {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setClientSecret(data.clientSecret);
+      } catch (error) {
+        console.error('Error generating client secret:', error);
+      }
+    };
+
+    generateClientSecret();
+  }, [botId]);
+
   const embedCode = `<!-- AI Chat Widget -->
-<div id="ai-chat-widget"></div>
 <script>
   (function() {
     var script = document.createElement('script');
     script.src = '${window.location.origin}/widget.js';
     script.defer = true;
     script.setAttribute('data-bot-id', '${botId}');
+    script.setAttribute('data-client-secret', '${clientSecret || ''}');
     script.setAttribute('data-base-url', '${window.location.origin}');
     document.head.appendChild(script);
   })();
@@ -28,6 +44,10 @@ export function EmbedCode({ botId }: EmbedCodeProps) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  if (!clientSecret) {
+    return <div>Loading embed code...</div>;
+  }
 
   return (
     <div className="mt-4">

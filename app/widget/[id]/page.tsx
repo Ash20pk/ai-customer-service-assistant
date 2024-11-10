@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import ChatWidget from '@/app/components/ChatWidget';
+import { useSearchParams } from 'next/navigation';
 
 interface Bot {
   _id: string;
@@ -13,6 +14,8 @@ interface Bot {
 export default function Widget({ params }: { params: { id: string } }) {
   const [bot, setBot] = useState<Bot | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const clientSecret = searchParams.get('clientSecret');
 
   useEffect(() => {
     const fetchBot = async () => {
@@ -33,6 +36,7 @@ export default function Widget({ params }: { params: { id: string } }) {
 
   if (error) return <div className="text-red-500">{error}</div>;
   if (!bot) return <div>Loading...</div>;
+  if (!clientSecret) return <div>Error: Missing client secret</div>;
 
   return (
     <div className="h-full">
@@ -44,7 +48,7 @@ export default function Widget({ params }: { params: { id: string } }) {
           overflow: hidden;
         }
       `}</style>
-      <ChatWidget botId={bot._id} botName={bot.name} />
+      <ChatWidget botId={bot._id} botName={bot.name} clientSecret={clientSecret} />
     </div>
   );
 } 
