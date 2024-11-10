@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import * as jose from 'jose';
-import { getDatabase } from '../../../lib/mongodb';
+import { getDatabase } from '@/lib/mongodb';
 
 /**
  * @dev Handles the POST request for user signup.
