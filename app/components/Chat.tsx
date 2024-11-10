@@ -1,8 +1,9 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Check } from 'lucide-react';
+import { Send, Check, Bot, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Navbar from './Navbar';
 
 interface ChatProps {
   botId: string;
@@ -22,13 +23,15 @@ const ChatMessage = ({ message, isStreaming }: {
   const isAssistant = message.role === 'assistant';
 
   return (
-    <div className={`w-full py-3 flex ${isAssistant ? 'justify-start' : 'justify-end'}`}>
+    <div className={`w-full py-2 flex ${isAssistant ? 'justify-start' : 'justify-end'}`}>
       <div
-        className={`max-w-[70%] flex items-start px-4 py-3 rounded-lg relative
-          ${isAssistant ? '' : 'bg-black text-white'}
-          ${isStreaming ? 'animate-pulse' : ''}`}
+        className={`
+          max-w-[70%] flex items-start px-4 py-3 rounded-xl relative
+          ${isAssistant ? 'bg-gray-100 text-gray-900' : 'bg-black text-white'}
+          ${isStreaming ? 'animate-pulse' : ''}
+        `}
       >
-        <p>{message.content}</p>
+        <p className="text-sm leading-relaxed">{message.content}</p>
         {!isAssistant && message.status && (
           <div className="absolute -bottom-5 right-1 text-xs text-gray-500 flex items-center">
             {message.status === 'sent' ? (
@@ -39,7 +42,7 @@ const ChatMessage = ({ message, isStreaming }: {
                 <Check className="w-3 h-3 -ml-1" />
               </div>
             )}
-            <span className="ml-1">{message.status}</span>
+            <span className="ml-1 text-[10px] uppercase tracking-wider">{message.status}</span>
           </div>
         )}
       </div>
@@ -47,23 +50,18 @@ const ChatMessage = ({ message, isStreaming }: {
   );
 };
 
-const TypingIndicator = ({ botName = 'Assistant' }: { botName?: string }) => (
-  <div className="flex items-center mt-2 text-gray-500 text-sm">
-    <span className="italic">{botName} typing</span>
-    <span className="ml-1">
-      {[0, 1, 2].map((dot) => (
-        <span
-          key={dot}
-          className="inline-block animate-[typing-indicator_1.4s_infinite_ease-in-out]"
-          style={{ 
-            animationDelay: `${dot * 0.2}s`,
-            marginLeft: '2px'
-          }}
-        >
-          .
-        </span>
-      ))}
-    </span>
+const TypingIndicator = () => (
+  <div className="w-full py-2 flex justify-start">
+    <div className="bg-gray-100 rounded-xl px-4 py-3.5 flex items-center">
+      <div className="flex space-x-1.5">
+        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" 
+          style={{ animationDelay: '0ms' }} />
+        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" 
+          style={{ animationDelay: '150ms' }} />
+        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" 
+          style={{ animationDelay: '300ms' }} />
+      </div>
+    </div>
   </div>
 );
 
@@ -153,6 +151,10 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
           setIsLoading(false);
           const data = JSON.parse(event.data);
           
+          if (data.sessionId) {
+            return;  // Skip processing this message since it's just the session ID
+          }
+
           if (data.content === "[DONE]") {
             eventSource.close();
             setIsStreaming(false);
@@ -169,7 +171,7 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
               const lastMessage = newConv[newConv.length - 1];
               if (lastMessage && lastMessage.role === 'assistant') {
                 const currentWords = lastMessage.content?.split(' ') || [];
-                const newWord = data.content.trim();
+                const newWord = data.content?.trim();
                 
                 if (!currentWords.length || currentWords[currentWords.length - 1] !== newWord) {
                   lastMessage.content = (lastMessage.content ? lastMessage.content + ' ' : '') + newWord;
@@ -209,41 +211,60 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
   }, [seen]);
 
   return (
-    <div className="flex flex-col h-[92vh] bg-white">
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="flex flex-col items-stretch max-w-3xl mx-auto w-full">
-          {conversation.map((message, index) => (
-            <ChatMessage 
-              key={index} 
-              message={message} 
-              isStreaming={isStreaming && index === conversation.length - 1}
-            />
-          ))}
-          {isTyping && (
-            <div className="flex justify-start">
-              <TypingIndicator botName={botName} />
+    <>
+      <Navbar />
+      <div className="flex flex-col h-[calc(100vh-64px)] bg-white">
+        {/* Header */}
+        <div className="border-b border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <div className="flex max-w-3xl mx-auto items-center">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="mr-4 p-1 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="font-medium text-gray-900">{botName}</h1>
+              <p className="text-xs text-gray-500">Online</p>
             </div>
-          )}
-          <div ref={messagesEndRef} />
+          </div>
+        </div>
+
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-6">
+          <div className="flex flex-col items-stretch max-w-3xl mx-auto w-full space-y-2">
+            {conversation.map((message, index) => (
+              <ChatMessage 
+                key={index} 
+                message={message} 
+                isStreaming={isStreaming && index === conversation.length - 1}
+              />
+            ))}
+            {isTyping && <TypingIndicator />}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+
+        {/* Input Area */}
+        <div className="border-t border-gray-200 bg-white p-4">
+          <form onSubmit={handleSubmit} className="flex max-w-3xl mx-auto">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.currentTarget.value)}
+              placeholder="Type a message..."
+              className="flex-1 mr-3 px-4 py-3 text-sm rounded-xl border border-gray-200 focus:border-gray-300 focus:ring-0 focus:outline-none disabled:opacity-50 disabled:bg-gray-50"
+              disabled={isLoading || isStreaming}
+            />
+            <button
+              type="submit"
+              className="text-white bg-black px-5 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
+              disabled={isLoading || isStreaming || !input.trim()}
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </form>
         </div>
       </div>
-      <div className="border-t border-gray-200 p-4 bg-white">
-        <form onSubmit={handleSubmit} className="flex max-w-3xl mx-auto">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.currentTarget.value)}
-            className="flex-1 mr-2 px-4 py-2 text-lg rounded-full border border-gray-300 disabled:opacity-50"
-            disabled={isLoading || isStreaming}
-          />
-          <button
-            type="submit"
-            className="text-black border-2 border-black px-4 py-2 text-lg rounded-full disabled:opacity-50"
-            disabled={isLoading || isStreaming}
-          >
-            <Send size={20} />
-          </button>
-        </form>
-      </div>
-    </div>
+    </>
   );
 }

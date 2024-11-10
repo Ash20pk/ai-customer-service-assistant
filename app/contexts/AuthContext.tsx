@@ -28,6 +28,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const checkAuth = async () => {
+    // Check if token exists in cookies
+    const cookies = document.cookie.split(';');
+    const hasToken = cookies.some(cookie => cookie.trim().startsWith('token='));
+
+    if (!hasToken) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/auth/session', {
         credentials: 'include',
@@ -57,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         credentials: 'include',
       });
       setUser(null);
-      router.push('/auth');
+      router.push('/');
     } catch (error) {
       console.error('Logout failed:', error);
     }

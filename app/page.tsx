@@ -1,64 +1,114 @@
 'use client';
 
-import { useAuth } from './contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Bot, Clock, Code, ArrowRight } from 'lucide-react';
+import Navbar from './components/Navbar';
+
 
 export default function Home() {
-  const { user, logout } = useAuth();
-  const router = useRouter();
 
-  if (!user) {
-    router.push('/auth');
-    return null;
-  }
+  const features = [
+    {
+      icon: <Bot className="w-6 h-6" />,
+      title: "One-Time Learning",
+      description: "Initial setup allows for comprehensive data input, creating a knowledge base tailored to your business.",
+    },
+    {
+      icon: <Clock className="w-6 h-6" />,
+      title: "24/7 Availability",
+      description: "Provide instant support to your customers around the clock with our AI assistant.",
+    },
+    {
+      icon: <Code className="w-6 h-6" />,
+      title: "Seamless Integration",
+      description: "Easy to integrate with any website using our simple embed code.",
+    },
+  ];
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Welcome to AI Chat
-        </p>
-        <div className="fixed right-0 top-0 flex justify-center space-x-4 border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          <Link href="/dashboard" className="text-blue-500 hover:underline">
-            Dashboard
-          </Link>
-          <button
-            onClick={logout}
-            className="text-red-500 hover:underline"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-
-      <section className="container mx-auto py-20 text-center">
-        <h2 className="text-5xl font-bold mb-6">Elevate Your Customer Service</h2>
-        <p className="text-xl text-gray-700 mb-8">AI-powered assistant that learns and adapts to your business</p>
-        <Link href="/dashboard" className="bg-black text-white px-8 py-3 rounded-full text-lg hover:bg-gray-800 transition">
-          Get Started
-        </Link>
-      </section>
-
-      <section id="features" className="bg-white py-20">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-500">Key Features</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="p-6 border border-gray-200 rounded-lg">
-              <h3 className="text-xl font-bold mb-4 text-gray-500">One-Time Learning</h3>
-              <p className="text-gray-700">Initial setup allows for comprehensive data input, creating a knowledge base tailored to your business.</p>
-            </div>
-            <div className="p-6 border border-gray-200 rounded-lg">
-              <h3 className="text-xl font-bold mb-4 text-gray-500">24/7 Availability</h3>
-              <p className="text-gray-700">Provide instant support to your customers around the clock with our AI assistant.</p>
-            </div>
-            <div className="p-6 border border-gray-200 rounded-lg">
-              <h3 className="text-xl font-bold mb-4 text-gray-500">Seamless Integration</h3>
-              <p className="text-gray-700">Easy to integrate with any website using our simple embed code.</p>
+    <>
+      <Navbar />
+      <div className="min-h-[calc(100vh-64px)]">
+        {/* Hero Section */}
+        <section className="relative py-20 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="relative z-10 text-center">
+              <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+                Elevate Your Customer Service
+              </h1>
+              <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
+                AI-powered assistant that learns and adapts to your business needs. Provide instant, accurate support to your customers 24/7.
+              </p>
+              <div className="mt-10 flex items-center justify-center gap-6">
+                <Link 
+                  href="/dashboard" 
+                  className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-black rounded-full hover:bg-gray-800 transition-colors"
+                >
+                  Get Started
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-    </main>
+          <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
+            <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-gray-200 to-gray-400 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-24 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+                Powerful Features
+              </h2>
+              <p className="mt-4 text-lg text-gray-600">
+                Everything you need to provide exceptional customer support
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+              {features.map((feature, index) => (
+                <div
+                  key={index}
+                  className="relative p-8 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="p-2 w-12 h-12 bg-gray-50 rounded-xl mb-6">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600">
+                    {feature.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+                Ready to transform your customer support?
+              </h2>
+              <p className="mt-4 text-lg text-gray-600">
+                Get started with AI Chat today and see the difference.
+              </p>
+              <Link 
+                href="/dashboard"
+                className="mt-8 inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-black rounded-full hover:bg-gray-800 transition-colors"
+              >
+                Go to Dashboard
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      </div>
+    </>
   );
 }

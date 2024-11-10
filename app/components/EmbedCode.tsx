@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ChevronDown, ChevronUp, Copy, Check, Code } from 'lucide-react';
 
 interface EmbedCodeProps {
   botId: string;
@@ -8,11 +9,14 @@ interface EmbedCodeProps {
 
 export function EmbedCode({ botId }: EmbedCodeProps) {
   const [copied, setCopied] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const generateClientSecret = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch(`/api/bots/${botId}/secret`, {
           credentials: 'include'
         });
@@ -20,6 +24,8 @@ export function EmbedCode({ botId }: EmbedCodeProps) {
         setClientSecret(data.clientSecret);
       } catch (error) {
         console.error('Error generating client secret:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -45,24 +51,59 @@ export function EmbedCode({ botId }: EmbedCodeProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (!clientSecret) {
-    return <div>Loading embed code...</div>;
-  }
-
   return (
-    <div className="mt-4">
-      <div className="flex justify-between items-center mb-2">
-        <label className="block text-sm font-medium text-gray-700">Embed Code</label>
-        <button
-          onClick={handleCopy}
-          className="text-sm text-blue-500 hover:text-blue-600"
-        >
-          {copied ? 'Copied!' : 'Copy'}
-        </button>
-      </div>
-      <pre className="p-3 bg-gray-100 rounded-md text-sm overflow-x-auto whitespace-pre-wrap">
-        {embedCode}
-      </pre>
+    <div className="mt-3">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+      >
+        <div className="flex items-center gap-2">
+          <Code className="h-4 w-4 text-gray-500" />
+          <span>Embed Code</span>
+        </div>
+        {isOpen ? (
+          <ChevronUp className="h-4 w-4 text-gray-500" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-gray-500" />
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-black" />
+            </div>
+          ) : (
+            <>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs text-gray-500">Add this code to your website</span>
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-green-500" />
+                      <span className="text-green-500">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" />
+                      <span>Copy code</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <div className="relative">
+                <pre className="max-h-48 overflow-y-auto rounded-md bg-white p-3 text-sm text-gray-800">
+                  {embedCode}
+                </pre>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
-} 
+}

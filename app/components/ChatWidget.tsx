@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Check } from 'lucide-react';
+import { Send, Check, Bot } from 'lucide-react';
 import { encrypt } from '@/lib/encryption';
 
 interface ChatWidgetProps {
@@ -23,13 +23,23 @@ const ChatMessage = ({ message, isStreaming }: {
   const isAssistant = message.role === 'assistant';
 
   return (
-    <div className={`w-full py-3 flex ${isAssistant ? 'justify-start' : 'justify-end'}`}>
+    <div className={`w-full py-2 flex ${isAssistant ? 'justify-start' : 'justify-end'}`}>
       <div
-        className={`max-w-[70%] flex items-start px-4 py-3 rounded-lg relative
-          ${isAssistant ? '' : 'bg-black text-white'}
-          ${isStreaming ? 'animate-pulse' : ''}`}
+        className={`
+          max-w-[70%] flex items-start px-4 py-3 rounded-xl relative
+          ${isAssistant ? 'bg-gray-100 text-gray-900' : 'bg-black text-white'}
+          ${isStreaming ? 'animate-pulse' : ''}
+          ${isAssistant ? 'shadow-sm' : 'shadow-md'}
+        `}
       >
-        <p>{message.content}</p>
+        {isAssistant && (
+          <div className="absolute -left-10 top-1">
+            <div className="p-1.5 bg-gray-100 rounded-lg">
+              <Bot className="w-4 h-4 text-gray-600" />
+            </div>
+          </div>
+        )}
+        <p className="text-sm leading-relaxed">{message.content}</p>
         {!isAssistant && message.status && (
           <div className="absolute -bottom-5 right-1 text-xs text-gray-500 flex items-center">
             {message.status === 'sent' ? (
@@ -40,7 +50,7 @@ const ChatMessage = ({ message, isStreaming }: {
                 <Check className="w-3 h-3 -ml-1" />
               </div>
             )}
-            <span className="ml-1">{message.status}</span>
+            <span className="ml-1 text-[10px] uppercase tracking-wider">{message.status}</span>
           </div>
         )}
       </div>
@@ -49,22 +59,27 @@ const ChatMessage = ({ message, isStreaming }: {
 };
 
 const TypingIndicator = ({ botName = 'Assistant' }: { botName?: string }) => (
-  <div className="flex items-center mt-2 text-gray-500 text-sm">
-    <span className="italic">{botName} typing</span>
-    <span className="ml-1">
-      {[0, 1, 2].map((dot) => (
-        <span
-          key={dot}
-          className="inline-block animate-[typing-indicator_1.4s_infinite_ease-in-out]"
-          style={{ 
-            animationDelay: `${dot * 0.2}s`,
-            marginLeft: '2px'
-          }}
-        >
-          .
-        </span>
-      ))}
-    </span>
+  <div className="flex items-center gap-2 text-gray-500 text-sm pl-2">
+    <div className="p-1.5 bg-gray-100 rounded-lg">
+      <Bot className="w-4 h-4 text-gray-600" />
+    </div>
+    <div className="flex items-center">
+      <span className="text-xs font-medium">{botName}</span>
+      <span className="ml-1">
+        {[0, 1, 2].map((dot) => (
+          <span
+            key={dot}
+            className="inline-block animate-[typing-indicator_1.4s_infinite_ease-in-out]"
+            style={{ 
+              animationDelay: `${dot * 0.2}s`,
+              marginLeft: '2px'
+            }}
+          >
+            .
+          </span>
+        ))}
+      </span>
+    </div>
   </div>
 );
 
@@ -196,7 +211,7 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
               const lastMessage = newConv[newConv.length - 1];
               if (lastMessage && lastMessage.role === 'assistant') {
                 const currentWords = lastMessage.content?.split(' ') || [];
-                const newWord = data.content.trim();
+                const newWord = data.content?.trim();
                 
                 if (!currentWords.length || currentWords[currentWords.length - 1] !== newWord) {
                   lastMessage.content = (lastMessage.content ? lastMessage.content + ' ' : '') + newWord;
@@ -235,9 +250,9 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
   }, [seen]);
 
   return (
-    <div className="flex flex-col h-full bg-white">
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="flex flex-col items-stretch w-full">
+    <div className="flex flex-col h-full bg-white relative">
+      <div className="flex-1 overflow-y-auto px-4 py-6 pb-24">
+        <div className="flex flex-col items-stretch w-full space-y-2">
           {conversation.map((message, index) => (
             <ChatMessage 
               key={index} 
@@ -246,31 +261,28 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
             />
           ))}
           {isTyping && (
-            <div className="flex justify-start">
+            <div className="flex justify-start mt-2">
               <TypingIndicator botName={botName} />
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
       </div>
-      <div className="border-t border-gray-200 p-4 bg-white">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+      <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 bg-white p-4">
+        <form onSubmit={handleSubmit} className="flex">
           <input
-            type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 px-4 py-2 text-lg rounded-full border border-gray-300 focus:outline-none focus:border-blue-500"
+            onChange={(e) => setInput(e.currentTarget.value)}
+            placeholder="Type a message..."
+            className="flex-1 mr-3 px-4 py-3 text-sm rounded-xl border border-gray-200 focus:border-gray-300 focus:ring-0 focus:outline-none disabled:opacity-50 disabled:bg-gray-50"
+            disabled={isLoading || isStreaming}
           />
           <button
             type="submit"
-            onClick={(e) => {
-              e.preventDefault();
-              handleSubmit(e as any);
-            }}
-            className="flex items-center justify-center min-w-[48px] h-[48px] text-black border-2 border-black rounded-full hover:bg-black hover:text-white transition-colors cursor-pointer"
+            className="text-white bg-black px-5 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
+            disabled={isLoading || isStreaming || !input.trim()}
           >
-            <Send size={20} />
+            <Send className="w-5 h-5" />
           </button>
         </form>
       </div>

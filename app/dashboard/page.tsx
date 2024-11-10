@@ -1,18 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { EmbedCode } from '../components/EmbedCode';
+import { Bot, Settings, MessageSquare, Plus, Loader2 } from 'lucide-react';
+import Navbar from '../components/Navbar';
 
-interface Bot {
+interface BotType {
   _id: string;
   name: string;
   description: string;
 }
 
-export default function Dashboard() {
-  const [bots, setBots] = useState<Bot[]>([]);
+const Dashboard = () => {
+  const [bots, setBots] = useState<BotType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
@@ -46,67 +48,86 @@ export default function Dashboard() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="container mx-auto py-8 px-4">
-        <div className="text-center">Loading...</div>
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">Your Chatbots</h1>
-          <button 
-            onClick={() => router.push('/create-bot')}
-            className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
-          >
-            Create New Bot
-          </button>
-        </div>
-
-        {bots && bots.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {bots.map((bot) => (
-              <div 
-                key={bot._id} 
-                className="p-6 border border-gray-200 rounded-lg shadow-sm"
-              >
-                <h2 className="text-xl font-bold mb-2">{bot.name}</h2>
-                <p className="text-gray-600 mb-4">{bot.description}</p>
-                
-                <div className="flex flex-col gap-2">
-                  <button 
-                    className="w-full px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
-                    onClick={() => router.push(`/bot/${bot._id}/playground?name=${bot.name}`)}
-                  >
-                    Open Playground
-                  </button>
-
-                  <button 
-                    className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                    onClick={() => router.push(`/bot/${bot._id}`)}
-                  >
-                    Manage Bot
-                  </button>
-
-                  <EmbedCode botId={bot._id} />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-10">
-            <p className="text-lg text-gray-600">You haven&apos;t created any bots yet.</p>
+    <>
+      <Navbar />
+      <div className="min-h-[calc(100vh-64px)]">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between border-b border-gray-200 pb-6">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900">Your Chatbots</h1>
+              <p className="mt-2 text-sm text-gray-500">Manage and monitor your AI assistants</p>
+            </div>
             <button 
-              className="mt-4 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
               onClick={() => router.push('/create-bot')}
+              className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
             >
-              Create Your First Bot
+              <Plus className="h-4 w-4" />
+              Create New Bot
             </button>
           </div>
-        )}
+
+          {bots.length > 0 ? (
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {bots.map((bot) => (
+                <div 
+                  key={bot._id}
+                  className="group relative rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md"
+                >
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xl font-semibold text-gray-900">{bot.name}</h2>
+                      <Bot className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <p className="mt-2 text-sm text-gray-500 line-clamp-2">{bot.description}</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <button 
+                      onClick={() => router.push(`/bot/${bot._id}/playground?name=${bot.name}`)}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Open Playground
+                    </button>
+
+                    <button 
+                      onClick={() => router.push(`/bot/${bot._id}`)}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Manage Bot
+                    </button>
+
+                    <EmbedCode botId={bot._id} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-16 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 p-12 text-center">
+              <Bot className="h-12 w-12 text-gray-400" />
+              <h3 className="mt-4 text-lg font-medium text-gray-900">No bots created yet</h3>
+              <p className="mt-2 text-sm text-gray-500">Get started by creating your first AI assistant</p>
+              <button 
+                onClick={() => router.push('/create-bot')}
+                className="mt-6 inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+              >
+                <Plus className="h-4 w-4" />
+                Create Your First Bot
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
-}
+};
+
+export default Dashboard;
