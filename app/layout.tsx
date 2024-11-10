@@ -16,11 +16,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-          <AuthProvider>
-            <main>{children}</main>
-          </AuthProvider>
+    <html lang="en" data-theme="light" className="light">
+      <body className={`${inter.className} bg-white [color-scheme:light]`}>
+        <AuthProvider>
+          <main className="bg-white min-h-screen [color-scheme:light]">{children}</main>
+        </AuthProvider>
       </body>
     </html>
   )
