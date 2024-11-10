@@ -70,13 +70,13 @@ const ChatMessage = ({ message, isStreaming, isTyping }: {
  */
 const TypingIndicator = () => (
   <div className="w-full py-2 flex justify-start">
-    <div className="bg-gray-100 rounded-xl px-4 py-3.5 flex items-center">
+    <div className="rounded-xl px-4 py-3.5 flex items-center">
       <div className="flex space-x-1.5">
-        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" 
+        <div className="w-1 h-1 bg-black rounded-full animate-bounce" 
           style={{ animationDelay: '0ms' }} />
-        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" 
+        <div className="w-1 h-1 bg-black rounded-full animate-bounce" 
           style={{ animationDelay: '150ms' }} />
-        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" 
+        <div className="w-1 h-1 bg-black rounded-full animate-bounce" 
           style={{ animationDelay: '300ms' }} />
       </div>
     </div>
