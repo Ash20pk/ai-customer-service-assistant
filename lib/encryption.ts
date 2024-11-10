@@ -1,6 +1,10 @@
 import crypto from 'crypto';
 
-// For browser-safe encryption/decryption
+/**
+ * @dev Encrypts the given text using base64 encoding and URI encoding for browser-safe encryption.
+ * @param text - The text to encrypt.
+ * @returns The encrypted text.
+ */
 export function encrypt(text: string): string {
   try {
     // Use encodeURIComponent to handle special characters before base64 encoding
@@ -11,6 +15,11 @@ export function encrypt(text: string): string {
   }
 }
 
+/**
+ * @dev Decrypts the given text using base64 decoding and URI decoding for browser-safe decryption.
+ * @param text - The text to decrypt.
+ * @returns The decrypted text.
+ */
 export function decrypt(text: string): string {
   try {
     // Decode base64 and then decode URI component
@@ -21,7 +30,11 @@ export function decrypt(text: string): string {
   }
 }
 
-// For server-side encryption (if needed)
+/**
+ * @dev Encrypts the given text using AES-256-CBC encryption for server-side encryption.
+ * @param text - The text to encrypt.
+ * @returns The encrypted text.
+ */
 export function serverEncrypt(text: string): string {
   if (typeof window === 'undefined') {
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '';
@@ -39,6 +52,11 @@ export function serverEncrypt(text: string): string {
   return btoa(encodeURIComponent(text));
 }
 
+/**
+ * @dev Decrypts the given text using AES-256-CBC decryption for server-side decryption.
+ * @param text - The text to decrypt.
+ * @returns The decrypted text.
+ */
 export function serverDecrypt(text: string): string {
   if (typeof window === 'undefined') {
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '';
@@ -56,4 +74,4 @@ export function serverDecrypt(text: string): string {
     return decrypted.toString('utf8');
   }
   return decodeURIComponent(atob(text));
-} 
+}

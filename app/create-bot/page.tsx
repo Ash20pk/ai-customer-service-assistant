@@ -7,6 +7,10 @@ import { Bot, ArrowLeft, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
+/**
+ * @dev CreateBot component for creating a new bot.
+ * @returns A React component that renders the bot creation form.
+ */
 export default function CreateBot() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -15,6 +19,10 @@ export default function CreateBot() {
   const { user } = useAuth();
   const router = useRouter();
 
+  /**
+   * @dev Handles the form submission for creating a new bot.
+   * @param e - The form event.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);

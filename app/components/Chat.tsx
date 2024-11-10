@@ -22,6 +22,13 @@ interface EventSourceData {
   content: string;
 }
 
+/**
+ * @dev ChatMessage component for displaying individual chat messages.
+ * @param message - The message object.
+ * @param isStreaming - Whether the message is currently streaming.
+ * @param isTyping - Whether the assistant is typing.
+ * @returns A React component that renders the chat message.
+ */
 const ChatMessage = ({ message, isStreaming, isTyping }: { 
   message: Message;
   isStreaming?: boolean;
@@ -57,6 +64,10 @@ const ChatMessage = ({ message, isStreaming, isTyping }: {
   );
 };
 
+/**
+ * @dev TypingIndicator component for displaying a typing indicator.
+ * @returns A React component that renders the typing indicator.
+ */
 const TypingIndicator = () => (
   <div className="w-full py-2 flex justify-start">
     <div className="bg-gray-100 rounded-xl px-4 py-3.5 flex items-center">
@@ -72,6 +83,12 @@ const TypingIndicator = () => (
   </div>
 );
 
+/**
+ * @dev Chat component for handling the chat interface with a specific bot.
+ * @param botId - The ID of the bot.
+ * @param botName - The name of the bot.
+ * @returns A React component that renders the chat interface.
+ */
 export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
   const [input, setInput] = useState('');
   const [conversation, setConversation] = useState<Message[]>([]);
@@ -83,10 +100,12 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
   const router = useRouter();
   const { user } = useAuth();
 
+  // Scroll to the bottom of the chat when a new message is added.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation, isTyping]);
 
+  // Redirect to the authentication page if the user is not logged in.
   useEffect(() => {
     if (!user) {
       router.push('/auth');
@@ -102,6 +121,10 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
     }
   }, [user, router, botName]);
 
+  /**
+   * @dev Handles the form submission for sending a message.
+   * @param e - The form event.
+   */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;

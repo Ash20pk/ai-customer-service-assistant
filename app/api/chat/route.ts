@@ -5,16 +5,22 @@ import OpenAI from 'openai';
 import crypto from 'crypto';
 import { decrypt } from '@/lib/encryption';
 
-// Add this type definition at the top of the file
+// Type definition for Server-Sent Events (SSE) data
 type SSEData = 
   | { sessionId: string }
   | { content: string }
   | { error: string };
 
+// Initialize the OpenAI client with the API key from environment variables.
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+/**
+ * @dev Handles the GET request to interact with the bot using Server-Sent Events (SSE).
+ * @param request - The incoming HTTP request.
+ * @returns A Response object containing the SSE stream with bot responses.
+ */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const botId = searchParams.get('botId');
@@ -23,6 +29,7 @@ export async function GET(request: NextRequest) {
   const sessionId = searchParams.get('sessionId');
   const isWidget = searchParams.get('widget') === 'true';
 
+  // Validate required parameters
   if (!botId || !message) {
     return new Response('Missing required parameters', { status: 400 });
   }
@@ -31,16 +38,17 @@ export async function GET(request: NextRequest) {
     const client = await clientPromise;
     const db = client.db('ai_chat_app');
 
-    // Get bot data first
+    // Fetch the bot data from the database
     const bot = await db.collection('bots').findOne({
       _id: new ObjectId(botId)
     });
 
+    // If the bot is not found, return a 404 error
     if (!bot) {
       return new Response('Bot not found', { status: 404 });
     }
 
-    // Verify client secret if it's a widget request
+    // Verify the client secret if it's a widget request
     if (isWidget) {
       if (!encryptedClientSecret) {
         return new Response('Unauthorized: Missing client secret', { status: 401 });
@@ -57,7 +65,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get or create session
+    // Fetch or create a session
     let session = null;
     if (sessionId) {
       session = await db.collection('sessions').findOne({
@@ -66,8 +74,8 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // If no session exists, create a new one
     if (!session) {
-      // Create new session
       session = {
         botId: new ObjectId(botId),
         sessionId: crypto.randomBytes(16).toString('hex'),
@@ -79,13 +87,13 @@ export async function GET(request: NextRequest) {
       await db.collection('sessions').insertOne(session);
     }
 
-    // Update last activity
+    // Update the last activity timestamp for the session
     await db.collection('sessions').updateOne(
       { _id: session._id },
       { $set: { lastActivity: new Date() } }
     );
 
-    // Use session's thread ID for the conversation
+    // Use the session's thread ID for the conversation
     await openai.beta.threads.messages.create(session.threadId, {
       role: "user",
       content: message,
@@ -98,7 +106,7 @@ export async function GET(request: NextRequest) {
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
-        // Send session ID first if it's a new session
+        // Send the session ID first if it's a new session
         if (!sessionId) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ sessionId: session.sessionId })}\n\n`));
         }
@@ -152,4 +160,5 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Ensure the route is dynamically rendered
 export const dynamic = 'force-dynamic';

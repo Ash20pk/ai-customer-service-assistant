@@ -7,6 +7,7 @@ import { Bot, Upload, FileText, ArrowLeft, AlertCircle, CheckCircle2, Loader2 } 
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 
+// Interface for the Version object.
 interface Version {
   version: number;
   fileName: string;
@@ -14,6 +15,7 @@ interface Version {
   uploadedAt: string;
 }
 
+// Interface for the Bot object.
 interface Bot {
   _id: string;
   name: string;
@@ -23,7 +25,13 @@ interface Bot {
   assistantId?: string;
 }
 
+/**
+ * @dev ManageBot component for managing a specific bot.
+ * @param params - The route parameters, containing the bot ID.
+ * @returns A React component that renders the bot management interface.
+ */
 export default function ManageBot({ params }: { params: { id: string } }) {
+  // State variables for the bot, file, loading state, uploading state, and error message.
   const { user } = useAuth();
   const router = useRouter();
   const [bot, setBot] = useState<Bot | null>(null);
@@ -32,6 +40,9 @@ export default function ManageBot({ params }: { params: { id: string } }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * @dev Fetches the bot data from the API.
+   */
   const fetchBot = async () => {
     if (!user) return;
 
@@ -55,6 +66,7 @@ export default function ManageBot({ params }: { params: { id: string } }) {
     }
   };
 
+  // Fetch the bot data when the component mounts or when the user changes.
   useEffect(() => {
     if (!user) {
       router.push('/auth');
@@ -63,12 +75,20 @@ export default function ManageBot({ params }: { params: { id: string } }) {
     }
   }, [user]);
 
+  /**
+   * @dev Handles the file change event for the file input.
+   * @param e - The change event.
+   */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFile(e.target.files[0]);
     }
   };
 
+  /**
+   * @dev Handles the form submission for uploading a document.
+   * @param e - The form event.
+   */
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !user) return;
@@ -98,6 +118,7 @@ export default function ManageBot({ params }: { params: { id: string } }) {
     }
   };
 
+  // Loading state UI.
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -106,6 +127,7 @@ export default function ManageBot({ params }: { params: { id: string } }) {
     );
   }
 
+  // Error state UI when the bot is not found.
   if (!bot) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -128,6 +150,7 @@ export default function ManageBot({ params }: { params: { id: string } }) {
     <>
       <Navbar />
       <div className="min-h-[calc(100vh-64px)]">
+        {/* Error message display */}
         {error && (
           <div className="mx-auto max-w-5xl px-4 py-4">
             <div className="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700">
@@ -137,6 +160,7 @@ export default function ManageBot({ params }: { params: { id: string } }) {
           </div>
         )}
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+          {/* Back to Dashboard button */}
           <button
             onClick={() => router.push('/dashboard')}
             className="mb-8 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"

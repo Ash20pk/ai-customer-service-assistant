@@ -1,13 +1,21 @@
 import { NextResponse } from 'next/server';
 
+/**
+ * @dev Handles the GET request to generate a JavaScript snippet for embedding the customer support widget.
+ * @param req - The incoming HTTP request.
+ * @returns A Response object containing the JavaScript snippet to embed the widget.
+ */
 export async function GET(req: Request) {
+  // Parse the request URL to extract search parameters and origin.
   const { searchParams, origin } = new URL(req.url);
   const botId = searchParams.get('botId');
 
+  // Validate that the bot ID is provided.
   if (!botId) {
     return new NextResponse('Bot ID is required', { status: 400 });
   }
 
+  // Generate the JavaScript snippet to embed the widget.
   const script = `
     (function() {
       // Create widget container
@@ -37,6 +45,7 @@ export async function GET(req: Request) {
     })();
   `;
 
+  // Return the JavaScript snippet in the response.
   return new NextResponse(script, {
     headers: {
       'Content-Type': 'application/javascript',

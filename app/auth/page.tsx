@@ -5,22 +5,35 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { Bot, Loader2, Mail, Lock, AlertCircle } from 'lucide-react';
 
+/**
+ * @dev Auth component for handling user login and signup.
+ * @returns A React component that renders the authentication form.
+ */
 export default function Auth() {
+  // State variables for email, password, login/signup mode, loading state, and error message.
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Hooks for routing and authentication context.
   const router = useRouter();
   const { login } = useAuth();
 
+  /**
+   * @dev Handles form submission for login or signup.
+   * @param e - The form event.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      // Determine the API endpoint based on the current mode (login or signup).
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,13 +44,16 @@ export default function Auth() {
 
       const data = await response.json();
 
+      // Handle errors from the API response.
       if (!response.ok) {
         throw new Error(data.error || 'Authentication failed');
       }
 
+      // Log the user in and redirect to the dashboard.
       await login(data.user);
       router.push('/dashboard');
     } catch (error: unknown) {
+      // Set the error message based on the type of error.
       setError(
         error instanceof Error ? error.message : 'An error occurred during authentication'
       );

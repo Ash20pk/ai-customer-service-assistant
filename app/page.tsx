@@ -5,9 +5,13 @@ import { Bot, Clock, Code, ArrowRight } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
-
+/**
+ * @dev Home component for the landing page of the application.
+ * @returns A React component that renders the landing page.
+ */
 export default function Home() {
 
+  // List of features to display on the landing page.
   const features = [
     {
       icon: <Bot className="w-8 h-8 fill-black" />,

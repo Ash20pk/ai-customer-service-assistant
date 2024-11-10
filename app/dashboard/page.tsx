@@ -8,18 +8,24 @@ import { Bot, Settings, MessageSquare, Plus, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
+// Interface for the Bot object.
 interface BotType {
   _id: string;
   name: string;
   description: string;
 }
 
+/**
+ * @dev Dashboard component for displaying the user's bots and providing actions to manage them.
+ * @returns A React component that renders the dashboard.
+ */
 const Dashboard = () => {
   const [bots, setBots] = useState<BotType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
 
+  // Fetch the user's bots when the component mounts or when the user changes.
   useEffect(() => {
     if (authLoading) return;
     
@@ -47,6 +53,7 @@ const Dashboard = () => {
     fetchBots();
   }, [user, authLoading, router]);
 
+  // Loading state UI.
   if (authLoading || isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">

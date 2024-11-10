@@ -1,5 +1,6 @@
 import { MongoClient } from 'mongodb';
 
+// Ensure the MongoDB URI is provided in the environment variables.
 if (!process.env.MONGODB_URI) {
   throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
 }
@@ -32,6 +33,10 @@ if (process.env.NODE_ENV === 'development') {
 // separate module, the client can be shared across functions.
 export default clientPromise;
 
+/**
+ * @dev Retrieves the database instance for the 'ai_chat_app' database.
+ * @returns A promise that resolves to the database instance.
+ */
 export async function getDatabase() {
   const client = await clientPromise;
   return client.db('ai_chat_app');

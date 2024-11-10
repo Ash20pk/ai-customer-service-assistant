@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Check, Bot, ArrowLeft } from 'lucide-react';
+import { Send, Check, Bot } from 'lucide-react';
 import { encrypt } from '@/lib/encryption';
 
 interface ChatWidgetProps {
@@ -16,6 +16,12 @@ interface Message {
   status?: 'sent' | 'seen';
 }
 
+/**
+ * @dev ChatMessage component for displaying individual chat messages.
+ * @param message - The message object.
+ * @param isStreaming - Whether the message is currently streaming.
+ * @returns A React component that renders the chat message.
+ */
 const ChatMessage = ({ message, isStreaming }: { 
   message: Message;
   isStreaming?: boolean;
@@ -58,6 +64,10 @@ const ChatMessage = ({ message, isStreaming }: {
   );
 };
 
+/**
+ * @dev TypingIndicator component for displaying a typing indicator.
+ * @returns A React component that renders the typing indicator.
+ */
 const TypingIndicator = () => (
   <div className="w-full py-2 flex justify-start">
     <div className="bg-gray-100 rounded-xl px-4 py-3.5 flex items-center">
@@ -73,6 +83,13 @@ const TypingIndicator = () => (
   </div>
 );
 
+/**
+ * @dev ChatWidget component for handling the chat interface with a specific bot.
+ * @param botId - The ID of the bot.
+ * @param botName - The name of the bot.
+ * @param clientSecret - The client secret for authentication.
+ * @returns A React component that renders the chat widget.
+ */
 export default function ChatWidget({ botId, botName = 'Assistant', clientSecret }: ChatWidgetProps) {
   const [input, setInput] = useState('');
   const [conversation, setConversation] = useState<Message[]>([]);
@@ -85,6 +102,7 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
   const [encryptedSecret, setEncryptedSecret] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'online'>('connecting');
 
+  // Encrypt the client secret when the component mounts.
   useEffect(() => {
     if (clientSecret) {
       try {
@@ -96,10 +114,12 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
     }
   }, [clientSecret]);
 
+  // Scroll to the bottom of the chat when a new message is added.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation, isTyping]);
 
+  // Simulate a connection delay and show the welcome message.
   useEffect(() => {
     // Random connection time between 1-2 seconds
     const connectionTime = Math.floor(Math.random() * 1000) + 1000; // 1000-2000ms
@@ -125,6 +145,10 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
     return () => clearTimeout(connectionTimer);
   }, [botName]);
 
+  /**
+   * @dev Handles the form submission for sending a message.
+   * @param e - The form event.
+   */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim() || !encryptedSecret) {
@@ -230,6 +254,7 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
     }
   };
 
+  // Remove the useEffect for typing animation since we're handling it in the event stream
   useEffect(() => {
     if (seen) {
       setIsTyping(true);

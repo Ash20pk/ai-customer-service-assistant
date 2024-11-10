@@ -7,12 +7,20 @@ interface EmbedCodeProps {
   botId: string;
 }
 
+/**
+ * @dev EmbedCode component for generating and displaying the embed code for the chat widget.
+ * @param botId - The ID of the bot.
+ * @returns A React component that renders the embed code modal.
+ */
 export function EmbedCode({ botId }: EmbedCodeProps) {
   const [copied, setCopied] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  /**
+   * @dev Fetches the client secret from the API.
+   */
   useEffect(() => {
     const generateClientSecret = async () => {
       try {
@@ -34,6 +42,9 @@ export function EmbedCode({ botId }: EmbedCodeProps) {
     }
   }, [botId, isOpen]);
 
+  /**
+   * @dev Handles the escape key to close the modal.
+   */
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -52,6 +63,7 @@ export function EmbedCode({ botId }: EmbedCodeProps) {
     };
   }, [isOpen]);
 
+  // Generate the embed code with the bot ID and client secret.
   const embedCode = `<!-- AI Chat Widget -->
 <script>
   (function() {
@@ -65,6 +77,9 @@ export function EmbedCode({ botId }: EmbedCodeProps) {
   })();
 </script>`;
 
+  /**
+   * @dev Copies the embed code to the clipboard.
+   */
   const handleCopy = () => {
     navigator.clipboard.writeText(embedCode);
     setCopied(true);
@@ -73,6 +88,7 @@ export function EmbedCode({ botId }: EmbedCodeProps) {
 
   return (
     <>
+      {/* Button to open the modal */}
       <button
         onClick={() => setIsOpen(true)}
         className="flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"

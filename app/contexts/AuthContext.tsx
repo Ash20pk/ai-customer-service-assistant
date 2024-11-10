@@ -3,12 +3,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+// Interface for the User object.
 interface User {
   id: string;
   email: string;
   token: string;
 }
 
+// Interface for the AuthContextType.
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -16,19 +18,28 @@ interface AuthContextType {
   logout: () => void;
 }
 
+// Create the AuthContext.
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * @dev AuthProvider component for managing authentication state.
+ * @param children - The child components.
+ * @returns A React component that provides the authentication context.
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  // Check the authentication status when the component mounts.
   useEffect(() => {
     checkAuth();
   }, []);
 
+  /**
+   * @dev Checks the authentication status by fetching the session data.
+   */
   const checkAuth = async () => {
-
     try {
       const response = await fetch('/api/auth/session', {
         credentials: 'include',
@@ -47,10 +58,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * @dev Logs in the user by setting the user data.
+   * @param userData - The user data to be set.
+   */
   const login = (userData: User) => {
     setUser(userData);
   };
 
+  /**
+   * @dev Logs out the user by clearing the user data and redirecting to the home page.
+   */
   const logout = async () => {
     try {
       await fetch('/api/auth/logout', {
@@ -64,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // If the authentication status is still loading, return null or a loading spinner.
   if (isLoading) {
     return null; // or a loading spinner
   }
@@ -75,6 +94,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * @dev Custom hook for accessing the authentication context.
+ * @returns The authentication context.
+ * @throws Error if used outside of an AuthProvider.
+ */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {

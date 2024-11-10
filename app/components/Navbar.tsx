@@ -5,10 +5,18 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LayoutDashboard } from 'lucide-react';
 
+/**
+ * @dev Navbar component for displaying the navigation bar.
+ * @returns A React component that renders the navigation bar.
+ */
 export default function Navbar() {
+  // Get the user and logout function from the authentication context.
   const { user, logout } = useAuth();
   const router = useRouter();
 
+  /**
+   * @dev Handles the logout action.
+   */
   const handleLogout = async () => {
     await logout();
     router.push('/auth');
@@ -21,7 +29,7 @@ export default function Navbar() {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link href="/" className="text-xl font-bold text-black">
-              Customer Support GPT
+                Customer Support GPT
               </Link>
             </div>
           </div>
@@ -58,4 +66,4 @@ export default function Navbar() {
       </div>
     </nav>
   );
-} 
+}
