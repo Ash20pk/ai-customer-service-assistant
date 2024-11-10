@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDown, Copy, Check, Code, X } from 'lucide-react';
+import { Copy, Check, Code, X } from 'lucide-react';
 
 interface EmbedCodeProps {
   botId: string;
@@ -75,13 +75,12 @@ export function EmbedCode({ botId }: EmbedCodeProps) {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+        className="flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
       >
         <div className="flex items-center gap-2">
           <Code className="h-4 w-4 text-gray-500" />
-          <span>Embed Code</span>
+          <span className="text-gray-500">Embed Code</span>
         </div>
-        <ChevronDown className="h-4 w-4 text-gray-500" />
       </button>
 
       {/* Modal Overlay */}

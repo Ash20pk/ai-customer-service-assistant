@@ -10,17 +10,17 @@ export default function Home() {
 
   const features = [
     {
-      icon: <Bot className="w-6 h-6" />,
+      icon: <Bot className="w-8 h-8 fill-black" />,
       title: "One-Time Learning",
       description: "Initial setup allows for comprehensive data input, creating a knowledge base tailored to your business.",
     },
     {
-      icon: <Clock className="w-6 h-6" />,
+      icon: <Clock className="w-8 h-8 fill-black" />,
       title: "24/7 Availability",
       description: "Provide instant support to your customers around the clock with our AI assistant.",
     },
     {
-      icon: <Code className="w-6 h-6" />,
+      icon: <Code className="w-8 h-8 fill-black" />,
       title: "Seamless Integration",
       description: "Easy to integrate with any website using our simple embed code.",
     },
@@ -29,21 +29,21 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <div className="min-h-[calc(100vh-64px)]">
+      <div className="min-h-[calc(100vh-64px)] bg-white [color-scheme:light]">
         {/* Hero Section */}
-        <section className="relative py-20 overflow-hidden">
+        <section className="relative py-20 overflow-hidden [color-scheme:light]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="relative z-10 text-center">
-              <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+              <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl [color-scheme:light]">
                 Elevate Your Customer Service
               </h1>
-              <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
+              <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto [color-scheme:light]">
                 AI-powered assistant that learns and adapts to your business needs. Provide instant, accurate support to your customers 24/7.
               </p>
               <div className="mt-10 flex items-center justify-center gap-6">
                 <Link 
                   href="/dashboard" 
-                  className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-black rounded-full hover:bg-gray-800 transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-black rounded-full hover:bg-gray-800 transition-colors [color-scheme:light]"
                 >
                   Get Started
                   <ArrowRight className="w-4 h-4" />
@@ -57,13 +57,13 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="py-24 bg-gray-50">
+        <section className="py-24 bg-gray-50 [color-scheme:light]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900 [color-scheme:light]">
                 Powerful Features
               </h2>
-              <p className="mt-4 text-lg text-gray-600">
+              <p className="mt-4 text-lg text-gray-600 [color-scheme:light]">
                 Everything you need to provide exceptional customer support
               </p>
             </div>
@@ -72,15 +72,15 @@ export default function Home() {
               {features.map((feature, index) => (
                 <div
                   key={index}
-                  className="relative p-8 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow"
+                  className="relative p-8 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow [color-scheme:light]"
                 >
-                  <div className="p-2 w-12 h-12 bg-gray-50 rounded-xl mb-6">
+                  <div className="p-2 w-12 h-12 bg-gray-100 rounded-xl mb-6">
                     {feature.icon}
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3 [color-scheme:light]">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 [color-scheme:light]">
                     {feature.description}
                   </p>
                 </div>
@@ -90,18 +90,18 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-24">
+        <section className="py-24 [color-scheme:light]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900 [color-scheme:light]">
                 Ready to transform your customer support?
               </h2>
-              <p className="mt-4 text-lg text-gray-600">
+              <p className="mt-4 text-lg text-gray-600 [color-scheme:light]">
                 Get started with AI Chat today and see the difference.
               </p>
               <Link 
                 href="/dashboard"
-                className="mt-8 inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-black rounded-full hover:bg-gray-800 transition-colors"
+                className="mt-8 inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-black rounded-full hover:bg-gray-800 transition-colors [color-scheme:light]"
               >
                 Go to Dashboard
                 <ArrowRight className="w-4 h-4" />

@@ -22,9 +22,10 @@ interface EventSourceData {
   content: string;
 }
 
-const ChatMessage = ({ message, isStreaming }: { 
+const ChatMessage = ({ message, isStreaming, isTyping }: { 
   message: Message;
   isStreaming?: boolean;
+  isTyping?: boolean;
 }) => {
   const isAssistant = message.role === 'assistant';
 
@@ -125,11 +126,9 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
 
       // Handle UI animations in parallel with API call
       const uiAnimationPromise = (async () => {
-        // Random delay for "seen" status (1-3 seconds)
         const randomDelay = Math.floor(Math.random() * 2000) + 1000;
         await new Promise(resolve => setTimeout(resolve, randomDelay));
         
-        // Update to "seen"
         setConversation(prev => 
           prev.map((msg, idx) => 
             idx === prev.length - 1 ? { ...msg, status: 'seen' } : msg
@@ -138,7 +137,6 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
         setSeen(true);
       })();
 
-      // Wait for both the API connection and UI animation to complete
       const [eventSource] = await Promise.all([
         eventSourcePromise,
         uiAnimationPromise
@@ -147,10 +145,8 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
       // Show typing indicator after seen
       setIsTyping(true);
 
-      // Initialize the assistant's response
-      setConversation(prev => [...prev, { role: 'assistant', content: '' }]);
-
       let isFirstMessage = true;
+      let assistantMessage = ''; // Store the message as we receive it
 
       eventSource.onmessage = (event: MessageEvent) => {
         try {
@@ -158,33 +154,22 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
           const data: EventSourceData = JSON.parse(event.data);
           
           if (data.sessionId) {
-            return;  // Skip processing this message since it's just the session ID
+            return;
           }
 
           if (data.content === "[DONE]") {
+            // Add the complete message at the end
+            setConversation(prev => [...prev, { role: 'assistant', content: assistantMessage.trim() }]);
             eventSource.close();
             setIsStreaming(false);
+            setIsTyping(false);
           } else {
-            // Stop typing animation on first message
             if (isFirstMessage) {
-              setIsTyping(false);
-              setIsStreaming(true);
+              // Only accumulate message, don't show it yet
               isFirstMessage = false;
             }
-
-            setConversation(prev => {
-              const newConv = [...prev];
-              const lastMessage = newConv[newConv.length - 1];
-              if (lastMessage && lastMessage.role === 'assistant') {
-                const currentWords = lastMessage.content?.split(' ') || [];
-                const newWord = data.content?.trim();
-                
-                if (!currentWords.length || currentWords[currentWords.length - 1] !== newWord) {
-                  lastMessage.content = (lastMessage.content ? lastMessage.content + ' ' : '') + newWord;
-                }
-              }
-              return newConv;
-            });
+            // Accumulate the message
+            assistantMessage += (assistantMessage ? ' ' : '') + data.content?.trim();
           }
         } catch (error) {
           console.error('Error parsing event data:', error);
@@ -246,6 +231,7 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
                 key={index} 
                 message={message} 
                 isStreaming={isStreaming && index === conversation.length - 1}
+                isTyping={isTyping}
               />
             ))}
             {isTyping && <TypingIndicator />}
@@ -260,7 +246,7 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
               value={input}
               onChange={(e) => setInput(e.currentTarget.value)}
               placeholder="Type a message..."
-              className="flex-1 mr-3 px-4 py-3 text-sm rounded-xl border border-gray-200 focus:border-gray-300 focus:ring-0 focus:outline-none disabled:opacity-50 disabled:bg-gray-50"
+              className="flex-1 mr-3 px-4 py-3 text-sm text-black rounded-xl border border-gray-200 focus:border-gray-300 focus:ring-0 focus:outline-none disabled:opacity-50 disabled:bg-gray-50"
               disabled={isLoading || isStreaming}
             />
             <button

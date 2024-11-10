@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Check, Bot } from 'lucide-react';
+import { Send, Check, Bot, ArrowLeft } from 'lucide-react';
 import { encrypt } from '@/lib/encryption';
 
 interface ChatWidgetProps {
@@ -58,27 +58,17 @@ const ChatMessage = ({ message, isStreaming }: {
   );
 };
 
-const TypingIndicator = ({ botName = 'Assistant' }: { botName?: string }) => (
-  <div className="flex items-center gap-2 text-gray-500 text-sm pl-2">
-    <div className="p-1.5 bg-gray-100 rounded-lg">
-      <Bot className="w-4 h-4 text-gray-600" />
-    </div>
-    <div className="flex items-center">
-      <span className="text-xs font-medium">{botName}</span>
-      <span className="ml-1">
-        {[0, 1, 2].map((dot) => (
-          <span
-            key={dot}
-            className="inline-block animate-[typing-indicator_1.4s_infinite_ease-in-out]"
-            style={{ 
-              animationDelay: `${dot * 0.2}s`,
-              marginLeft: '2px'
-            }}
-          >
-            .
-          </span>
-        ))}
-      </span>
+const TypingIndicator = () => (
+  <div className="w-full py-2 flex justify-start">
+    <div className="bg-gray-100 rounded-xl px-4 py-3.5 flex items-center">
+      <div className="flex space-x-1.5">
+        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" 
+          style={{ animationDelay: '0ms' }} />
+        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" 
+          style={{ animationDelay: '150ms' }} />
+        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" 
+          style={{ animationDelay: '300ms' }} />
+      </div>
     </div>
   </div>
 );
@@ -93,6 +83,7 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [encryptedSecret, setEncryptedSecret] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'online'>('connecting');
 
   useEffect(() => {
     if (clientSecret) {
@@ -110,14 +101,28 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
   }, [conversation, isTyping]);
 
   useEffect(() => {
-    if (conversation.length === 0) {
-      setConversation([
-        { 
+    // Random connection time between 1-2 seconds
+    const connectionTime = Math.floor(Math.random() * 1000) + 1000; // 1000-2000ms
+    
+    const connectionTimer = setTimeout(() => {
+      setConnectionStatus('online');
+      
+      // Add typing indicator
+      setIsTyping(true);
+      
+      // After a delay, show the welcome message
+      const messageTimer = setTimeout(() => {
+        setIsTyping(false);
+        setConversation([{ 
           role: 'assistant', 
           content: `Hi! I am ${botName}, how can I help you?` 
-        }
-      ]);
-    }
+        }]);
+      }, 1500); // Typing animation duration
+
+      return () => clearTimeout(messageTimer);
+    }, connectionTime); // Random connection delay
+
+    return () => clearTimeout(connectionTimer);
   }, [botName]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -150,18 +155,15 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
           url.searchParams.append('sessionId', sessionId);
         }
         
-        console.log('Making API call with URL:', url.toString());
         const es = new EventSource(url.toString());
         resolve(es);
       });
 
       // Handle UI animations in parallel with API call
       const uiAnimationPromise = (async () => {
-        // Random delay for "seen" status (1-3 seconds)
         const randomDelay = Math.floor(Math.random() * 2000) + 1000;
         await new Promise(resolve => setTimeout(resolve, randomDelay));
         
-        // Update to "seen"
         setConversation(prev => 
           prev.map((msg, idx) => 
             idx === prev.length - 1 ? { ...msg, status: 'seen' } : msg
@@ -170,7 +172,6 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
         setSeen(true);
       })();
 
-      // Wait for both the API connection and UI animation to complete
       const [eventSource] = await Promise.all([
         eventSourcePromise,
         uiAnimationPromise
@@ -179,46 +180,32 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
       // Show typing indicator after seen
       setIsTyping(true);
 
-      // Initialize the assistant's response
-      setConversation(prev => [...prev, { role: 'assistant', content: '' }]);
-
       let isFirstMessage = true;
+      let assistantMessage = ''; // Store the message as we receive it
 
       eventSource.onmessage = (event) => {
         try {
           setIsLoading(false);
           const data = JSON.parse(event.data);
           
-          // Handle session ID
           if (data.sessionId) {
             setSessionId(data.sessionId);
             return;
           }
 
           if (data.content === "[DONE]") {
+            // Add the complete message at the end
+            setConversation(prev => [...prev, { role: 'assistant', content: assistantMessage.trim() }]);
             eventSource.close();
             setIsStreaming(false);
+            setIsTyping(false);
           } else {
-            // Stop typing animation on first message
             if (isFirstMessage) {
-              setIsTyping(false);
-              setIsStreaming(true);
+              // Only accumulate message, don't show it yet
               isFirstMessage = false;
             }
-
-            setConversation(prev => {
-              const newConv = [...prev];
-              const lastMessage = newConv[newConv.length - 1];
-              if (lastMessage && lastMessage.role === 'assistant') {
-                const currentWords = lastMessage.content?.split(' ') || [];
-                const newWord = data.content?.trim();
-                
-                if (!currentWords.length || currentWords[currentWords.length - 1] !== newWord) {
-                  lastMessage.content = (lastMessage.content ? lastMessage.content + ' ' : '') + newWord;
-                }
-              }
-              return newConv;
-            });
+            // Accumulate the message
+            assistantMessage += (assistantMessage ? ' ' : '') + data.content?.trim();
           }
         } catch (error) {
           console.error('Error parsing event data:', error);
@@ -250,8 +237,29 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
   }, [seen]);
 
   return (
-    <div className="flex flex-col h-full bg-white relative">
-      <div className="flex-1 overflow-y-auto px-4 py-6 pb-24">
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-white">
+        {/* Header */}
+        <div className="border-b border-gray-200 bg-white px-4 py-3 shadow-sm">
+              <div className="flex items-center">
+                <div 
+                  className={`w-2 h-2 rounded-full mr-2 animate-pulse ${
+                    connectionStatus === 'connecting' 
+                      ? 'bg-orange-400' 
+                      : 'bg-green-500'
+                  }`} 
+                />
+                <div>
+                    <h1 className="font-medium text-gray-900">
+                      {connectionStatus === 'connecting' ? 'Agent' : botName}
+                    </h1>
+                    <p className="text-xs text-gray-500">
+                      {connectionStatus === 'connecting' ? 'Connecting to agent...' : 'Online'}
+                    </p>
+                </div>
+              </div>
+        </div>
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-6">
         <div className="flex flex-col items-stretch w-full space-y-2">
           {conversation.map((message, index) => (
             <ChatMessage 
@@ -261,20 +269,21 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
             />
           ))}
           {isTyping && (
-            <div className="flex justify-start mt-2">
-              <TypingIndicator botName={botName} />
+            <div className="flex justify-start">
+              <TypingIndicator />
             </div>
           )}
           <div ref={messagesEndRef} />
+          </div>
         </div>
-      </div>
-      <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 bg-white p-4">
-        <form onSubmit={handleSubmit} className="flex">
+        {/* Input */}
+        <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 bg-white p-4">
+          <form onSubmit={handleSubmit} className="flex">
           <input
             value={input}
             onChange={(e) => setInput(e.currentTarget.value)}
             placeholder="Type a message..."
-            className="flex-1 mr-3 px-4 py-3 text-sm rounded-xl border border-gray-200 focus:border-gray-300 focus:ring-0 focus:outline-none disabled:opacity-50 disabled:bg-gray-50"
+            className="flex-1 mr-3 px-4 py-3 text-sm text-black rounded-xl border border-gray-200 focus:border-gray-300 focus:ring-0 focus:outline-none disabled:opacity-50 disabled:bg-gray-50"
             disabled={isLoading || isStreaming}
           />
           <button
@@ -284,8 +293,8 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
           >
             <Send className="w-5 h-5" />
           </button>
-        </form>
-      </div>
+          </form>
+        </div>
     </div>
   );
 }

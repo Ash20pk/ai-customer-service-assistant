@@ -229,7 +229,7 @@ export default function ManageBot({ params }: { params: { id: string } }) {
                         <p className="font-medium text-gray-900">Version {version.version}</p>
                         <p className="mt-1 text-sm text-gray-500">{version.fileName}</p>
                       </div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 text-right">
                         {new Date(version.uploadedAt).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
