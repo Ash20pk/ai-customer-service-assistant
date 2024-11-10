@@ -56,7 +56,28 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
+  `;
+
+  // Create close button
+  const closeButton = document.createElement('button');
+  closeButton.style.cssText = `
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    background: #f3f4f6;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+    z-index: 1000001;
+    opacity: 0;
+    visibility: hidden;
   `;
 
   // Set iframe source with the correct base URL
@@ -64,6 +85,7 @@
 
   // Add elements to DOM
   container.appendChild(iframe);
+  container.appendChild(closeButton);
   document.body.appendChild(container);
   document.body.appendChild(chatButton);
 
@@ -71,6 +93,13 @@
   chatButton.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+  `;
+
+  closeButton.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>
   `;
 
@@ -83,32 +112,35 @@
     chatButton.style.transform = 'scale(1)';
   });
 
-  // Handle opening and closing
-  let isOpen = false;
+  closeButton.addEventListener('mouseover', () => {
+    closeButton.style.background = '#e5e7eb';
+  });
 
-  function toggleWidget() {
-    isOpen = !isOpen;
-    if (isOpen) {
-      container.style.transform = 'scale(1)';
-      container.style.opacity = '1';
-      chatButton.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      `;
-    } else {
-      container.style.transform = 'scale(0)';
-      container.style.opacity = '0';
-      chatButton.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-      `;
-    }
+  closeButton.addEventListener('mouseout', () => {
+    closeButton.style.background = '#f3f4f6';
+  });
+
+  // Handle opening and closing
+  function openWidget() {
+    container.style.transform = 'scale(1)';
+    container.style.opacity = '1';
+    chatButton.style.opacity = '0';
+    chatButton.style.visibility = 'hidden';
+    closeButton.style.opacity = '1';
+    closeButton.style.visibility = 'visible';
   }
 
-  chatButton.addEventListener('click', toggleWidget);
+  function closeWidget() {
+    container.style.transform = 'scale(0)';
+    container.style.opacity = '0';
+    chatButton.style.opacity = '1';
+    chatButton.style.visibility = 'visible';
+    closeButton.style.opacity = '0';
+    closeButton.style.visibility = 'hidden';
+  }
+
+  chatButton.addEventListener('click', openWidget);
+  closeButton.addEventListener('click', closeWidget);
 
   // Handle mobile responsiveness
   function adjustForMobile() {
