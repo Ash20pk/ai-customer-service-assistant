@@ -4,6 +4,7 @@ import { Send, Check, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navbar from './Navbar';
+import Footer from './Footer';
 
 interface ChatProps {
   botId: string;
@@ -272,6 +273,7 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
           </form>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { EmbedCode } from '../components/EmbedCode';
 import { Bot, Settings, MessageSquare, Plus, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 interface BotType {
   _id: string;
@@ -126,6 +127,7 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+      <Footer />
     </>
   );
 };

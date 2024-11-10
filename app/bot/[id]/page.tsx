@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Bot, Upload, FileText, ArrowLeft, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import Navbar from '../../components/Navbar';
+import Footer from '../../components/Footer';
 
 interface Version {
   version: number;
@@ -247,6 +248,7 @@ export default function ManageBot({ params }: { params: { id: string } }) {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

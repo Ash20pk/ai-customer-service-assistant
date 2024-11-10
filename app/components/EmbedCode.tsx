@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Copy, Check, Code } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Check, Code, X } from 'lucide-react';
 
 interface EmbedCodeProps {
   botId: string;
@@ -29,8 +29,28 @@ export function EmbedCode({ botId }: EmbedCodeProps) {
       }
     };
 
-    generateClientSecret();
-  }, [botId]);
+    if (isOpen) {
+      generateClientSecret();
+    }
+  }, [botId, isOpen]);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   const embedCode = `<!-- AI Chat Widget -->
 <script>
@@ -52,58 +72,105 @@ export function EmbedCode({ botId }: EmbedCodeProps) {
   };
 
   return (
-    <div className="mt-3">
+    <>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen(true)}
         className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
       >
         <div className="flex items-center gap-2">
           <Code className="h-4 w-4 text-gray-500" />
           <span>Embed Code</span>
         </div>
-        {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-gray-500" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-gray-500" />
-        )}
+        <ChevronDown className="h-4 w-4 text-gray-500" />
       </button>
 
+      {/* Modal Overlay */}
       {isOpen && (
-        <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-4">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-black" />
-            </div>
-          ) : (
-            <>
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs text-gray-500">Add this code to your website</span>
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="min-h-screen px-4 text-center">
+            {/* Background overlay */}
+            <div 
+              className="fixed inset-0 bg-black/25 backdrop-blur-sm transition-opacity"
+              onClick={() => setIsOpen(false)}
+            />
+
+            {/* Modal position helper */}
+            <span className="inline-block h-screen align-middle" aria-hidden="true">&#8203;</span>
+
+            {/* Modal panel */}
+            <div className="inline-block w-full max-w-xl p-6 my-8 text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl relative">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-gray-100 rounded-lg">
+                    <Code className="h-5 w-5 text-gray-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Embed Code
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Add this code to your website to enable the chat widget
+                    </p>
+                  </div>
+                </div>
                 <button
-                  onClick={handleCopy}
-                  className="flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                  onClick={() => setIsOpen(false)}
+                  className="text-gray-400 hover:text-gray-500 p-1 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  {copied ? (
-                    <>
-                      <Check className="h-3.5 w-3.5 text-green-500" />
-                      <span className="text-green-500">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3.5 w-3.5" />
-                      <span>Copy code</span>
-                    </>
-                  )}
+                  <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="relative">
-                <pre className="max-h-48 overflow-y-auto rounded-md bg-white p-3 text-sm text-gray-800">
-                  {embedCode}
-                </pre>
+
+              {/* Content */}
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-black" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Add to your website's HTML</span>
+                      <button
+                        onClick={handleCopy}
+                        className="flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="h-4 w-4 text-green-500" />
+                            <span className="text-green-500">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-4 w-4" />
+                            <span>Copy code</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <pre className="max-h-[360px] overflow-y-auto rounded-lg bg-white p-4 text-sm text-gray-800 shadow-sm">
+                        {embedCode}
+                      </pre>
+                    </div>
+                  </>
+                )}
               </div>
-            </>
-          )}
+
+              {/* Footer */}
+              <div className="mt-6 text-right">
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-800"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

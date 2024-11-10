@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Bot, Clock, Code, ArrowRight } from 'lucide-react';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 
 export default function Home() {
@@ -109,6 +110,7 @@ export default function Home() {
           </div>
         </section>
       </div>
+      <Footer />
     </>
   );
 }

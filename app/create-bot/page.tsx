@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Bot, ArrowLeft, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 export default function CreateBot() {
   const [name, setName] = useState('');
@@ -138,6 +139,7 @@ export default function CreateBot() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }
