@@ -26,13 +26,11 @@ interface EventSourceData {
  * @dev ChatMessage component for displaying individual chat messages.
  * @param message - The message object.
  * @param isStreaming - Whether the message is currently streaming.
- * @param isTyping - Whether the assistant is typing.
  * @returns A React component that renders the chat message.
  */
-const ChatMessage = ({ message, isStreaming, isTyping }: { 
+const ChatMessage = ({ message, isStreaming }: { 
   message: Message;
   isStreaming?: boolean;
-  isTyping?: boolean;
 }) => {
   const isAssistant = message.role === 'assistant';
 
@@ -254,7 +252,6 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
                 key={index} 
                 message={message} 
                 isStreaming={isStreaming && index === conversation.length - 1}
-                isTyping={isTyping}
               />
             ))}
             {isTyping && <TypingIndicator />}
