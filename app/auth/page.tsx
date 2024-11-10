@@ -49,9 +49,22 @@ export default function Auth() {
         throw new Error(data.error || 'Authentication failed');
       }
 
-      // Log the user in and redirect to the dashboard.
-      await login(data.user);
-      router.push('/dashboard');
+      if (!isLogin) {
+        const response = await fetch('/api/auth/session', {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        const data = await response.json();
+
+        // Log the user in and redirect to the dashboard.
+        await login(data.user);
+        router.push('/dashboard');
+      } else {
+        // Log the user in and redirect to the dashboard.
+        await login(data.user);
+        router.push('/dashboard');
+      }
     } catch (error: unknown) {
       // Set the error message based on the type of error.
       setError(
