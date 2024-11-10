@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const botId = searchParams.get('botId');
   const message = searchParams.get('message');
-  const clientSecret = searchParams.get('clientSecret');
+  const encryptedClientSecret = searchParams.get('clientSecret');
   const sessionId = searchParams.get('sessionId');
   const isWidget = searchParams.get('widget') === 'true';
 
@@ -48,49 +48,41 @@ export async function GET(request: NextRequest) {
 
     // Verify client secret if it's a widget request
     if (isWidget) {
-      if (!clientSecret) {
+      if (!encryptedClientSecret) {
         return new Response('Unauthorized: Missing client secret', { status: 401 });
       }
 
-      if (clientSecret !== bot.clientSecret) {
-        return new Response('Unauthorized: Invalid client secret', { status: 401 });
-      }
-    } else {
-      // Verify auth token for non-widget requests
-      const cookieStore = cookies();
-      const token = cookieStore.get('auth_token');
-      if (!token) {
-        return new Response('Unauthorized', { status: 401 });
-      }
-      const userId = await verifyToken(token.value);
-      if (!userId || userId !== bot.userId.toString()) {
-        return new Response('Unauthorized', { status: 401 });
+      try {
+        const decryptedSecret = decrypt(encryptedClientSecret);
+        if (decryptedSecret !== bot.clientSecret) {
+          return new Response('Unauthorized: Invalid client secret', { status: 401 });
+        }
+      } catch (error) {
+        console.error('Error decrypting client secret:', error);
+        return new Response('Unauthorized: Invalid encryption', { status: 401 });
       }
     }
 
     // Get or create session
-    let session: Session | null = null;
+    let session = null;
     if (sessionId) {
       session = await db.collection('sessions').findOne({
         sessionId,
         botId: new ObjectId(botId)
-      }) as Session | null;
+      });
     }
 
     if (!session) {
       // Create new session
-      const newSession = {
-        _id: new ObjectId(),
+      session = {
         botId: new ObjectId(botId),
-        clientSecret: clientSecret || '',
         sessionId: crypto.randomBytes(16).toString('hex'),
         threadId: (await openai.beta.threads.create()).id,
         createdAt: new Date(),
         lastActivity: new Date()
       };
       
-      await db.collection('sessions').insertOne(newSession);
-      session = newSession;
+      await db.collection('sessions').insertOne(session);
     }
 
     // Update last activity

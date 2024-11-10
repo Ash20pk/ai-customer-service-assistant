@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Send, Check } from 'lucide-react';
+import { encrypt } from '@/lib/encryption';
 
 interface ChatWidgetProps {
   botId: string;
@@ -76,6 +77,18 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
   const [seen, setSeen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [encryptedSecret, setEncryptedSecret] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (clientSecret) {
+      try {
+        const encrypted = encrypt(clientSecret);
+        setEncryptedSecret(encrypted);
+      } catch (error) {
+        console.error('Error encrypting client secret:', error);
+      }
+    }
+  }, [clientSecret]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -94,8 +107,8 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim() || !clientSecret) {
-      console.error('Missing input or client secret:', { input: input.trim(), hasSecret: !!clientSecret });
+    if (!input.trim() || !encryptedSecret) {
+      console.error('Missing input or encrypted secret');
       return;
     }
 
@@ -117,7 +130,7 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
         url.searchParams.append('message', encodedInput);
         url.searchParams.append('botId', botId);
         url.searchParams.append('widget', 'true');
-        url.searchParams.append('clientSecret', clientSecret);
+        url.searchParams.append('clientSecret', encryptedSecret);
         if (sessionId) {
           url.searchParams.append('sessionId', sessionId);
         }
