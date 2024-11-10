@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Copy, Check, Code, X } from 'lucide-react';
+import { ChevronDown, Copy, Check, Code, X } from 'lucide-react';
 
 interface EmbedCodeProps {
   botId: string;
@@ -131,7 +131,7 @@ export function EmbedCode({ botId }: EmbedCodeProps) {
                 ) : (
                   <>
                     <div className="mb-3 flex items-center justify-between">
-                      <span className="text-sm text-gray-500">Add to your website's HTML</span>
+                      <span className="text-sm text-gray-500">Add to your website&apos;s HTML</span>
                       <button
                         onClick={handleCopy}
                         className="flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
