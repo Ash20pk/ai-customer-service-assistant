@@ -90,7 +90,7 @@ export default function CreateBot() {
                   required
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  Choose a name that reflects your bot's purpose
+                  Choose a name that reflects your bot&apos;s purpose
                 </p>
               </div>
 
@@ -107,7 +107,7 @@ export default function CreateBot() {
                   placeholder="Describe what your bot does and how it can help users..."
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  Provide details about your bot's capabilities and purpose
+                  Provide details about your bot&apos;s capabilities and purpose
                 </p>
               </div>
 

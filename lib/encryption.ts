@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 // For browser-safe encryption/decryption
 export function encrypt(text: string): string {
   try {
@@ -22,7 +24,6 @@ export function decrypt(text: string): string {
 // For server-side encryption (if needed)
 export function serverEncrypt(text: string): string {
   if (typeof window === 'undefined') {
-    const crypto = require('crypto');
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '';
     const iv = crypto.randomBytes(16);
     const key = crypto.createHash('sha256')
@@ -40,7 +41,6 @@ export function serverEncrypt(text: string): string {
 
 export function serverDecrypt(text: string): string {
   if (typeof window === 'undefined') {
-    const crypto = require('crypto');
     const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '';
     const [ivHex, encryptedHex] = text.split(':');
     const iv = Buffer.from(ivHex, 'hex');

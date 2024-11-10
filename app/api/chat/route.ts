@@ -1,25 +1,19 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import clientPromise from '@/lib/mongodb';
-import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 import OpenAI from 'openai';
 import crypto from 'crypto';
 import { decrypt } from '@/lib/encryption';
 
+// Add this type definition at the top of the file
+type SSEData = 
+  | { sessionId: string }
+  | { content: string }
+  | { error: string };
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-interface Session {
-  _id: ObjectId;
-  botId: ObjectId;
-  clientSecret: string;
-  sessionId: string;
-  threadId: string;
-  createdAt: Date;
-  lastActivity: Date;
-}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -109,7 +103,7 @@ export async function GET(request: NextRequest) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ sessionId: session.sessionId })}\n\n`));
         }
 
-        const sendSSE = (data: any) => {
+        const sendSSE = (data: SSEData) => {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
         };
 

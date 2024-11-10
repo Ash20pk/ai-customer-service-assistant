@@ -37,8 +37,10 @@ export default function Auth() {
 
       await login(data.user);
       router.push('/dashboard');
-    } catch (error: any) {
-      setError(error.message || 'An error occurred during authentication');
+    } catch (error: unknown) {
+      setError(
+        error instanceof Error ? error.message : 'An error occurred during authentication'
+      );
       console.error('Error:', error);
     } finally {
       setIsLoading(false);

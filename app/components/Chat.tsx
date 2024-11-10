@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Check, Bot, ArrowLeft } from 'lucide-react';
+import { Send, Check, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navbar from './Navbar';
@@ -14,6 +14,11 @@ interface Message {
   role: string;
   content: string;
   status?: 'sent' | 'seen';
+}
+
+interface EventSourceData {
+  sessionId?: string;
+  content: string;
 }
 
 const ChatMessage = ({ message, isStreaming }: { 
@@ -146,10 +151,10 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
 
       let isFirstMessage = true;
 
-      eventSource.onmessage = (event) => {
+      eventSource.onmessage = (event: MessageEvent) => {
         try {
           setIsLoading(false);
-          const data = JSON.parse(event.data);
+          const data: EventSourceData = JSON.parse(event.data);
           
           if (data.sessionId) {
             return;  // Skip processing this message since it's just the session ID
@@ -185,7 +190,7 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
         }
       };
 
-      eventSource.onerror = (error) => {
+      eventSource.onerror = (error: Event) => {
         console.error('EventSource failed:', error);
         eventSource.close();
         setIsStreaming(false);
@@ -195,7 +200,9 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
       };
 
     } catch (error) {
-      console.error('Error getting advice:', error);
+      if (error instanceof Error) {
+        console.error('Error getting advice:', error.message);
+      }
       setIsStreaming(false);
       setIsTyping(false);
       setSeen(false);

@@ -127,6 +127,14 @@ export default function ManageBot({ params }: { params: { id: string } }) {
     <>
       <Navbar />
       <div className="min-h-[calc(100vh-64px)]">
+        {error && (
+          <div className="mx-auto max-w-5xl px-4 py-4">
+            <div className="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-red-700">
+              <AlertCircle className="h-5 w-5" />
+              <p>{error}</p>
+            </div>
+          </div>
+        )}
         <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
           <button
             onClick={() => router.push('/dashboard')}
