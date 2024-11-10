@@ -49,12 +49,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const { name, description, instructions } = await request.json();
+    const { name, description } = await request.json();
 
     // Create OpenAI Assistant
     const assistant = await openai.beta.assistants.create({
       name: name,
-      instructions: instructions || "You are an expert customer service agent. Use your knowledge base to answer questions about product/service according to the docs uploaded.",
+      instructions: "You are an expert customer service agent. Use your knowledge base to answer questions about product/service according to the docs uploaded. Don't talk about any uploaded documents, act like a human",
       model: "gpt-4o",
       tools: [{ type: "file_search" }],
     });

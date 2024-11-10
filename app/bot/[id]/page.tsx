@@ -29,6 +29,14 @@ export default function ManageBot({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth');
+    } else {
+      fetchBot();
+    }
+  }, [user]);
+
   const fetchBot = async () => {
     if (!user) return;
 
@@ -132,13 +140,6 @@ export default function ManageBot({ params }: { params: { id: string } }) {
         ) : (
           <p>No documents uploaded yet.</p>
         )}
-      </div>
-
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Test Your Bot</h2>
-        <Link href={`/bot/${params.id}/playground`} className="bg-green-500 text-white px-4 py-2 rounded">
-          Open Playground
-        </Link>
       </div>
     </div>
   );

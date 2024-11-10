@@ -78,7 +78,7 @@ export default function Dashboard() {
                 <div className="flex flex-col gap-2">
                   <button 
                     className="w-full px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
-                    onClick={() => router.push(`/bot/${bot._id}/playground`)}
+                    onClick={() => router.push(`/bot/${bot._id}/playground?name=${bot.name}`)}
                   >
                     Open Playground
                   </button>
