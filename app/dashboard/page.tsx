@@ -12,7 +12,7 @@ import Footer from '../components/Footer';
 interface BotType {
   _id: string;
   name: string;
-  description: string;
+  description: string | " ";
 }
 
 /**
