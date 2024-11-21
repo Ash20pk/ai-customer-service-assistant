@@ -119,6 +119,11 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
     }
   }, [user, router, botName]);
 
+  // Filter out content within special brackets
+  const filterBracketedContent = (text: string): string => {
+    return text.replace(/【[^】]*】/g, '').trim();
+  };
+
   /**
    * @dev Handles the form submission for sending a message.
    * @param e - The form event.
@@ -179,18 +184,31 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
           }
 
           if (data.content === "[DONE]") {
-            // Add the complete message at the end
-            setConversation(prev => [...prev, { role: 'assistant', content: assistantMessage.trim() }]);
             eventSource.close();
             setIsStreaming(false);
             setIsTyping(false);
           } else {
             if (isFirstMessage) {
-              // Only accumulate message, don't show it yet
+              // Add an empty assistant message that we'll update
+              setConversation(prev => [...prev, { role: 'assistant', content: '' }]);
+              setIsStreaming(true);
               isFirstMessage = false;
             }
-            // Accumulate the message
-            assistantMessage += (assistantMessage ? ' ' : '') + data.content?.trim();
+            // Update the last message with accumulated content
+            const filteredContent = filterBracketedContent(data.content?.trim() || '');
+            if (filteredContent) {  // Only add content if there's something after filtering
+              assistantMessage += (assistantMessage ? ' ' : '') + filteredContent;
+              setConversation(prev => {
+                const newConv = [...prev];
+                if (newConv.length > 0) {
+                  newConv[newConv.length - 1] = {
+                    role: 'assistant',
+                    content: assistantMessage
+                  };
+                }
+                return newConv;
+              });
+            }
           }
         } catch (error) {
           console.error('Error parsing event data:', error);
