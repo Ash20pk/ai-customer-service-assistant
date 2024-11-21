@@ -98,13 +98,16 @@ export async function GET(request: NextRequest) {
     if (history) {
       try {
         const parsedHistory = JSON.parse(decodeURIComponent(history));
-        // Add previous messages to the thread
-        for (const msg of parsedHistory) {
-          await openai.beta.threads.messages.create(session.threadId, {
+        // Only send the last 5 messages to reduce context loading time
+        const recentHistory = parsedHistory.slice(-5);
+        
+        // Add messages in parallel instead of sequentially
+        await Promise.all(recentHistory.map(msg => 
+          openai.beta.threads.messages.create(session.threadId, {
             role: msg.role,
             content: msg.content,
-          });
-        }
+          })
+        ));
       } catch (error) {
         console.error('Error parsing conversation history:', error);
       }
@@ -121,10 +124,10 @@ export async function GET(request: NextRequest) {
       Your responses should be:
       1. Clear and concise while maintaining a human, conversational tone
       2. Empathetic and understanding of the customer's needs
-      3. Professional yet warm
-      4. Based on the available information without explicitly mentioning or referring to any documents
-      5. Focused on providing accurate, helpful information without technical jargon
-      6. Natural in flow, as if you're having a real conversation
+      3. focus on current questions, don't poke about previous questions
+      4. Keep your responses short within 20-30 words and to the point. Only go beyond it if needed
+      5. Based on the available information without explicitly mentioning or referring to any documents
+      6. Don't talk about any uploaded documents
 
       Remember to:
       - Never mention that you're an AI or that you're using any documents
@@ -148,24 +151,30 @@ export async function GET(request: NextRequest) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
         };
 
-        while (true) {
+        let pollingCount = 0;
+        const maxPolls = 100; // Add a maximum number of polling attempts
+
+        while (pollingCount < maxPolls) {
           const runStatus = await openai.beta.threads.runs.retrieve(session.threadId, run.id);
           
           if (runStatus.status === 'completed') {
-            const messages = await openai.beta.threads.messages.list(session.threadId);
+            const messages = await openai.beta.threads.messages.list(session.threadId, {
+              limit: 1,
+              order: 'desc'
+            });
             const lastMessage = messages.data[0];
 
             if (lastMessage?.role === "assistant" && lastMessage.content?.[0]?.type === "text") {
               const text = lastMessage.content[0].text.value;
-              // Optimize word streaming by sending chunks of words
+              // Send larger chunks (5 words) for faster display
               const words = text.split(' ');
-              const chunkSize = 3; // Send 3 words at a time
+              const chunkSize = 5;
               
               for (let i = 0; i < words.length; i += chunkSize) {
                 const chunk = words.slice(i, i + chunkSize).join(' ');
                 sendSSE({ content: chunk });
-                // Reduced delay between chunks
-                await new Promise(resolve => setTimeout(resolve, 20));
+                // Minimal delay between chunks
+                await new Promise(resolve => setTimeout(resolve, 10));
               }
             }
             sendSSE({ content: '[DONE]' });
@@ -177,8 +186,14 @@ export async function GET(request: NextRequest) {
             break;
           }
 
-          // Reduced polling interval from 500ms to 200ms
-          await new Promise(resolve => setTimeout(resolve, 200));
+          pollingCount++;
+          // Reduced polling interval to 150ms
+          await new Promise(resolve => setTimeout(resolve, 150));
+        }
+
+        if (pollingCount >= maxPolls) {
+          sendSSE({ error: 'Response timeout' });
+          controller.close();
         }
       }
     });

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Send, Check, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -29,23 +29,20 @@ interface EventSourceData {
  * @param isStreaming - Whether the message is currently streaming.
  * @returns A React component that renders the chat message.
  */
-const ChatMessage = ({ message, isStreaming }: { 
+const ChatMessage = React.memo(({ message, isStreaming }: { 
   message: Message;
   isStreaming?: boolean;
 }) => {
   const isAssistant = message.role === 'assistant';
 
   // Custom components for ReactMarkdown
-  const components = {
-    // Style paragraphs
+  const components = useMemo(() => ({
     p: ({ children }) => <p className="text-sm leading-relaxed mb-2">{children}</p>,
-    // Style bold text
     strong: ({ children }) => <span className="font-semibold">{children}</span>,
-    // Style lists
     ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
     ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
     li: ({ children }) => <li className="mb-1">{children}</li>,
-  };
+  }), []);
 
   return (
     <div className={`w-full py-2 flex ${isAssistant ? 'justify-start' : 'justify-end'}`}>
@@ -77,13 +74,13 @@ const ChatMessage = ({ message, isStreaming }: {
       </div>
     </div>
   );
-};
+});
 
 /**
  * @dev TypingIndicator component for displaying a typing indicator.
  * @returns A React component that renders the typing indicator.
  */
-const TypingIndicator = () => (
+const TypingIndicator = React.memo(() => (
   <div className="w-full py-2 flex justify-start">
     <div className="rounded-xl px-4 py-3.5 flex items-center">
       <div className="flex space-x-1.5">
@@ -96,7 +93,7 @@ const TypingIndicator = () => (
       </div>
     </div>
   </div>
-);
+));
 
 /**
  * @dev Chat component for handling the chat interface with a specific bot.
@@ -116,9 +113,15 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
   const { user } = useAuth();
 
   // Scroll to the bottom of the chat when a new message is added.
-  useEffect(() => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversation, isTyping]);
+  }, []);
+
+  useEffect(() => {
+    if (conversation.length > 0 || isTyping) {
+      scrollToBottom();
+    }
+  }, [conversation.length, isTyping, scrollToBottom]);
 
   // Redirect to the authentication page if the user is not logged in.
   useEffect(() => {
@@ -262,13 +265,6 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
       alert("Error: An error occurred while getting advice. Please try again.");
     }
   };
-
-  // Remove the useEffect for typing animation since we're handling it in the event stream
-  useEffect(() => {
-    if (seen) {
-      setIsTyping(true);
-    }
-  }, [seen]);
 
   return (
     <>
