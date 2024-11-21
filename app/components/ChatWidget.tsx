@@ -142,9 +142,15 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
     }
   }, [clientSecret]);
 
-  // Scroll to the bottom of the chat when a new message is added.
+  // Function to filter out content within 【】brackets
+  const filterBracketedContent = (text: string): string => {
+    return text.replace(/【[^】]*】/g, '');
+  };
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (conversation.length > 0 || isTyping) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [conversation, isTyping]);
 
   // Simulate a connection delay and show the welcome message.
@@ -264,7 +270,7 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
               isFirstMessage = false;
             }
             // Update the last message with accumulated content
-            const filteredContent = data.content?.trim() || '';
+            const filteredContent = filterBracketedContent(data.content?.trim() || '');
             if (filteredContent) {  // Only add content if there's something after filtering
               assistantMessage += (assistantMessage ? ' ' : '') + filteredContent;
               setConversation(prev => {
