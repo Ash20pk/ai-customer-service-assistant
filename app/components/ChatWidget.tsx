@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Check, Bot } from 'lucide-react';
 import { encrypt } from '@/lib/encryption';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatWidgetProps {
   botId: string;
@@ -28,6 +29,18 @@ const ChatMessage = ({ message, isStreaming }: {
 }) => {
   const isAssistant = message.role === 'assistant';
 
+  // Custom components for ReactMarkdown
+  const components = {
+    // Style paragraphs
+    p: ({ children }) => <p className="text-sm leading-relaxed mb-2">{children}</p>,
+    // Style bold text
+    strong: ({ children }) => <span className="font-semibold">{children}</span>,
+    // Style lists
+    ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
+    ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
+    li: ({ children }) => <li className="mb-1">{children}</li>,
+  };
+
   return (
     <div className={`w-full py-2 flex ${isAssistant ? 'justify-start' : 'justify-end'}`}>
       <div
@@ -45,7 +58,11 @@ const ChatMessage = ({ message, isStreaming }: {
             </div>
           </div>
         )}
-        <p className="text-sm leading-relaxed">{message.content}</p>
+        <div className="prose prose-sm max-w-none">
+          <ReactMarkdown components={components}>
+            {message.content}
+          </ReactMarkdown>
+        </div>
         {!isAssistant && message.status && (
           <div className="absolute -bottom-5 right-1 text-xs text-gray-500 flex items-center">
             {message.status === 'sent' ? (
@@ -121,8 +138,8 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
 
   // Simulate a connection delay and show the welcome message.
   useEffect(() => {
-    // Random connection time between 1-2 seconds
-    const connectionTime = Math.floor(Math.random() * 1000) + 1000; // 1000-2000ms
+    // Random connection time between 0.5-1 seconds
+    const connectionTime = Math.floor(Math.random() * 500) + 500; // 500-1000ms
     
     const connectionTimer = setTimeout(() => {
       setConnectionStatus('online');
@@ -137,7 +154,7 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
           role: 'assistant', 
           content: `Hi! I am ${botName}, how can I help you?` 
         }]);
-      }, 1500); // Typing animation duration
+      }, 1000); // Reduced from 1500ms
 
       return () => clearTimeout(messageTimer);
     }, connectionTime); // Random connection delay
@@ -170,11 +187,18 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
       // Start both the API call and the UI animations immediately
       const encodedInput = encodeURIComponent(currentInput);
       const eventSourcePromise = new Promise<EventSource>((resolve) => {
+        // Get last 10 messages for context
+        const lastMessages = conversation.slice(-10).map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
+
         const url = new URL(`${window.location.origin}/api/chat`);
         url.searchParams.append('message', encodedInput);
         url.searchParams.append('botId', botId);
         url.searchParams.append('widget', 'true');
         url.searchParams.append('clientSecret', encryptedSecret);
+        url.searchParams.append('history', encodeURIComponent(JSON.stringify(lastMessages)));
         if (sessionId) {
           url.searchParams.append('sessionId', sessionId);
         }
@@ -185,7 +209,7 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
 
       // Handle UI animations in parallel with API call
       const uiAnimationPromise = (async () => {
-        const randomDelay = Math.floor(Math.random() * 2000) + 1000;
+        const randomDelay = Math.floor(Math.random() * 1000) + 500; // Reduced from 2000+1000 to 1000+500
         await new Promise(resolve => setTimeout(resolve, randomDelay));
         
         setConversation(prev => 
@@ -218,18 +242,31 @@ export default function ChatWidget({ botId, botName = 'Assistant', clientSecret 
           }
 
           if (data.content === "[DONE]") {
-            // Add the complete message at the end
-            setConversation(prev => [...prev, { role: 'assistant', content: assistantMessage.trim() }]);
             eventSource.close();
             setIsStreaming(false);
             setIsTyping(false);
           } else {
             if (isFirstMessage) {
-              // Only accumulate message, don't show it yet
+              // Add an empty assistant message that we'll update
+              setConversation(prev => [...prev, { role: 'assistant', content: '' }]);
+              setIsStreaming(true);
               isFirstMessage = false;
             }
-            // Accumulate the message
-            assistantMessage += (assistantMessage ? ' ' : '') + data.content?.trim();
+            // Update the last message with accumulated content
+            const filteredContent = data.content?.trim() || '';
+            if (filteredContent) {  // Only add content if there's something after filtering
+              assistantMessage += (assistantMessage ? ' ' : '') + filteredContent;
+              setConversation(prev => {
+                const newConv = [...prev];
+                if (newConv.length > 0) {
+                  newConv[newConv.length - 1] = {
+                    role: 'assistant',
+                    content: assistantMessage
+                  };
+                }
+                return newConv;
+              });
+            }
           }
         } catch (error) {
           console.error('Error parsing event data:', error);

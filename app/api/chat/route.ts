@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
   const encryptedClientSecret = searchParams.get('clientSecret');
   const sessionId = searchParams.get('sessionId');
   const isWidget = searchParams.get('widget') === 'true';
+  const history = searchParams.get('history');
 
   // Validate required parameters
   if (!botId || !message) {
@@ -94,6 +95,21 @@ export async function GET(request: NextRequest) {
     );
 
     // Use the session's thread ID for the conversation
+    if (history) {
+      try {
+        const parsedHistory = JSON.parse(decodeURIComponent(history));
+        // Add previous messages to the thread
+        for (const msg of parsedHistory) {
+          await openai.beta.threads.messages.create(session.threadId, {
+            role: msg.role,
+            content: msg.content,
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing conversation history:', error);
+      }
+    }
+
     await openai.beta.threads.messages.create(session.threadId, {
       role: "user",
       content: message,
@@ -112,9 +128,10 @@ export async function GET(request: NextRequest) {
 
       Remember to:
       - Never mention that you're an AI or that you're using any documents
-      - Keep responses concise but complete
+      - Keep responses concise and summarized
       - Show understanding of customer concerns
       - Use a friendly, helpful tone
+      - If you don't find the answer in the document, say "Let me forward the query to my senior executive to assist you". Don't say anything else about not finding it in the doc or file uploaded
       - Stay focused on solving the customer's query
       - Maintain a natural conversation flow`
     });
@@ -140,12 +157,15 @@ export async function GET(request: NextRequest) {
 
             if (lastMessage?.role === "assistant" && lastMessage.content?.[0]?.type === "text") {
               const text = lastMessage.content[0].text.value;
-              // Split the text into words and send each word immediately
+              // Optimize word streaming by sending chunks of words
               const words = text.split(' ');
-              for (const word of words) {
-                sendSSE({ content: word });
-                // Small delay between words for natural reading flow
-                await new Promise(resolve => setTimeout(resolve, 50));
+              const chunkSize = 3; // Send 3 words at a time
+              
+              for (let i = 0; i < words.length; i += chunkSize) {
+                const chunk = words.slice(i, i + chunkSize).join(' ');
+                sendSSE({ content: chunk });
+                // Reduced delay between chunks
+                await new Promise(resolve => setTimeout(resolve, 20));
               }
             }
             sendSSE({ content: '[DONE]' });
@@ -157,8 +177,8 @@ export async function GET(request: NextRequest) {
             break;
           }
 
-          // Check status every 500ms
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Reduced polling interval from 500ms to 200ms
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
     });

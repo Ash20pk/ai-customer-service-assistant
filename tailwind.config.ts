@@ -21,8 +21,31 @@ const config: Config = {
           '100%': { opacity: '1' },
         },
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            color: 'inherit',
+            a: {
+              color: 'inherit',
+              '&:hover': {
+                color: 'inherit',
+              },
+            },
+            strong: {
+              color: 'inherit',
+            },
+            code: {
+              color: 'inherit',
+            },
+            pre: {
+              color: 'inherit',
+              backgroundColor: 'transparent',
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/typography')],
 };
 export default config;

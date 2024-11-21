@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Check, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
@@ -34,6 +35,18 @@ const ChatMessage = ({ message, isStreaming }: {
 }) => {
   const isAssistant = message.role === 'assistant';
 
+  // Custom components for ReactMarkdown
+  const components = {
+    // Style paragraphs
+    p: ({ children }) => <p className="text-sm leading-relaxed mb-2">{children}</p>,
+    // Style bold text
+    strong: ({ children }) => <span className="font-semibold">{children}</span>,
+    // Style lists
+    ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
+    ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
+    li: ({ children }) => <li className="mb-1">{children}</li>,
+  };
+
   return (
     <div className={`w-full py-2 flex ${isAssistant ? 'justify-start' : 'justify-end'}`}>
       <div
@@ -43,7 +56,11 @@ const ChatMessage = ({ message, isStreaming }: {
           ${isStreaming ? 'animate-pulse' : ''}
         `}
       >
-        <p className="text-sm leading-relaxed">{message.content}</p>
+        <div className="prose prose-sm max-w-none">
+          <ReactMarkdown components={components}>
+            {message.content}
+          </ReactMarkdown>
+        </div>
         {!isAssistant && message.status && (
           <div className="absolute -bottom-5 right-1 text-xs text-gray-500 flex items-center">
             {message.status === 'sent' ? (
@@ -146,7 +163,18 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
       // Start both the API call and the UI animations immediately
       const encodedInput = encodeURIComponent(currentInput);
       const eventSourcePromise = new Promise<EventSource>((resolve) => {
-        const es = new EventSource(`/api/chat?message=${encodedInput}&token=${user?.token}&botId=${botId}`);
+        // Get last 10 messages for context
+        const lastMessages = conversation.slice(-10).map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
+        
+        const url = new URL('/api/chat', window.location.origin);
+        url.searchParams.append('message', encodedInput);
+        url.searchParams.append('botId', botId);
+        url.searchParams.append('history', encodeURIComponent(JSON.stringify(lastMessages)));
+        
+        const es = new EventSource(url.toString());
         resolve(es);
       });
 
