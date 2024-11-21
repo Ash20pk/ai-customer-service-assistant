@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Send, Check, Bot } from 'lucide-react';
 import { encrypt } from '@/lib/encryption';
 import ReactMarkdown from 'react-markdown';
+import type { Components } from 'react-markdown';
 
 interface ChatWidgetProps {
   botId: string;
@@ -12,7 +13,7 @@ interface ChatWidgetProps {
 }
 
 interface Message {
-  role: string;
+  role: 'assistant' | 'user';
   content: string;
   status?: 'sent' | 'seen';
 }
@@ -23,22 +24,29 @@ interface Message {
  * @param isStreaming - Whether the message is currently streaming.
  * @returns A React component that renders the chat message.
  */
-const ChatMessage = ({ message, isStreaming }: { 
+const ChatMessage = React.memo(({ message, isStreaming }: { 
   message: Message;
   isStreaming?: boolean;
 }) => {
   const isAssistant = message.role === 'assistant';
 
-  // Custom components for ReactMarkdown
-  const components = {
-    // Style paragraphs
-    p: ({ children }) => <p className="text-sm leading-relaxed mb-2">{children}</p>,
-    // Style bold text
-    strong: ({ children }) => <span className="font-semibold">{children}</span>,
-    // Style lists
-    ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
-    ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
-    li: ({ children }) => <li className="mb-1">{children}</li>,
+  // Custom components for ReactMarkdown with proper typing
+  const components: Components = {
+    p: ({ children }) => (
+      <p className="text-sm leading-relaxed mb-2">{children}</p>
+    ),
+    strong: ({ children }) => (
+      <span className="font-semibold">{children}</span>
+    ),
+    ul: ({ children }) => (
+      <ul className="list-disc ml-4 mb-2">{children}</ul>
+    ),
+    ol: ({ children }) => (
+      <ol className="list-decimal ml-4 mb-2">{children}</ol>
+    ),
+    li: ({ children }) => (
+      <li className="mb-1">{children}</li>
+    ),
   };
 
   return (
@@ -79,7 +87,10 @@ const ChatMessage = ({ message, isStreaming }: {
       </div>
     </div>
   );
-};
+});
+
+// Add display name for the memoized component
+ChatMessage.displayName = 'ChatMessage';
 
 /**
  * @dev TypingIndicator component for displaying a typing indicator.

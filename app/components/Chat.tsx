@@ -4,16 +4,12 @@ import { Send, Check, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
+import type { Components } from 'react-markdown';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
-interface ChatProps {
-  botId: string;
-  botName?: string;
-}
-
 interface Message {
-  role: string;
+  role: 'user' | 'assistant';
   content: string;
   status?: 'sent' | 'seen';
 }
@@ -21,6 +17,11 @@ interface Message {
 interface EventSourceData {
   sessionId?: string;
   content: string;
+}
+
+interface ChatProps {
+  botId: string;
+  botName?: string;
 }
 
 /**
@@ -35,13 +36,23 @@ const ChatMessage = React.memo(({ message, isStreaming }: {
 }) => {
   const isAssistant = message.role === 'assistant';
 
-  // Custom components for ReactMarkdown
-  const components = useMemo(() => ({
-    p: ({ children }) => <p className="text-sm leading-relaxed mb-2">{children}</p>,
-    strong: ({ children }) => <span className="font-semibold">{children}</span>,
-    ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
-    ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
-    li: ({ children }) => <li className="mb-1">{children}</li>,
+  // Custom components for ReactMarkdown with proper typing
+  const components: Components = useMemo(() => ({
+    p: ({ children }) => (
+      <p className="text-sm leading-relaxed mb-2">{children}</p>
+    ),
+    strong: ({ children }) => (
+      <span className="font-semibold">{children}</span>
+    ),
+    ul: ({ children }) => (
+      <ul className="list-disc ml-4 mb-2">{children}</ul>
+    ),
+    ol: ({ children }) => (
+      <ol className="list-decimal ml-4 mb-2">{children}</ol>
+    ),
+    li: ({ children }) => (
+      <li className="mb-1">{children}</li>
+    ),
   }), []);
 
   return (
@@ -76,6 +87,8 @@ const ChatMessage = React.memo(({ message, isStreaming }: {
   );
 });
 
+ChatMessage.displayName = 'ChatMessage';
+
 /**
  * @dev TypingIndicator component for displaying a typing indicator.
  * @returns A React component that renders the typing indicator.
@@ -95,6 +108,8 @@ const TypingIndicator = React.memo(() => (
   </div>
 ));
 
+TypingIndicator.displayName = 'TypingIndicator';
+
 /**
  * @dev Chat component for handling the chat interface with a specific bot.
  * @param botId - The ID of the bot.
@@ -107,7 +122,6 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [seen, setSeen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { user } = useAuth();
@@ -154,7 +168,6 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
 
     try {
       // Reset states
-      setSeen(false);
       setIsTyping(false);
       
       // Add user message with 'sent' status
@@ -191,7 +204,6 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
             idx === prev.length - 1 ? { ...msg, status: 'seen' } : msg
           )
         );
-        setSeen(true);
       })();
 
       const [eventSource] = await Promise.all([
@@ -251,7 +263,6 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
         eventSource.close();
         setIsStreaming(false);
         setIsTyping(false);
-        setSeen(false);
         alert("Connection Error: Failed to connect to the server. Please try again.");
       };
 
@@ -261,7 +272,6 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
       }
       setIsStreaming(false);
       setIsTyping(false);
-      setSeen(false);
       alert("Error: An error occurred while getting advice. Please try again.");
     }
   };
@@ -302,7 +312,7 @@ export default function Chat({ botId, botName = 'Assistant' }: ChatProps) {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-gray-200 bg-white p-4">
+        <div className="border-b border-gray-200 bg-white p-4">
           <form onSubmit={handleSubmit} className="flex max-w-3xl mx-auto">
             <input
               value={input}

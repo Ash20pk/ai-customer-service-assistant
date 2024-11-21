@@ -11,6 +11,12 @@ type SSEData =
   | { content: string }
   | { error: string };
 
+// Define the message type interface
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 // Initialize the OpenAI client with the API key from environment variables.
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -97,12 +103,12 @@ export async function GET(request: NextRequest) {
     // Use the session's thread ID for the conversation
     if (history) {
       try {
-        const parsedHistory = JSON.parse(decodeURIComponent(history));
+        const parsedHistory = JSON.parse(decodeURIComponent(history)) as ChatMessage[];
         // Only send the last 5 messages to reduce context loading time
         const recentHistory = parsedHistory.slice(-5);
         
         // Add messages in parallel instead of sequentially
-        await Promise.all(recentHistory.map(msg => 
+        await Promise.all(recentHistory.map((msg: ChatMessage) => 
           openai.beta.threads.messages.create(session.threadId, {
             role: msg.role,
             content: msg.content,
@@ -132,7 +138,7 @@ export async function GET(request: NextRequest) {
       Remember to:
       - Never mention that you're an AI or that you're using any documents
       - Keep responses concise and summarized
-      - Show understanding of customer concerns
+      - Show understanding of customer concerns, ask follow-up questions
       - Use a friendly, helpful tone
       - If you don't find the answer in the document, say "Let me forward the query to my senior executive to assist you". Don't say anything else about not finding it in the doc or file uploaded
       - Stay focused on solving the customer's query
